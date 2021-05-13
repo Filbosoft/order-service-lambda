@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 
-namespace order_service_lambda
+namespace API
 {
     /// <summary>
     /// This class extends from APIGatewayProxyFunction which contains the method FunctionHandlerAsync which is the 

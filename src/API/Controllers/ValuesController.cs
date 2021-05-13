@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
-namespace order_service_lambda.Controllers
+namespace API.Controllers
 {
     [Route("api/[controller]")]
     public class ValuesController : ControllerBase
