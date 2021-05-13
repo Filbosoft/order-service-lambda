@@ -1,0 +1,15 @@
+#13/05/2021 [PB] - Initialization
+First and formost this is the commands used to initialize this project:
+
+1. Installed the Lambda templates:
+dotnet tool install -g Amazon.Lambda.Tools
+
+2. Used the Serverless template to generate the base application:
+dotnet new serverless.AspNetCoreWebAPI
+
+3. Then renamed order-service-lambda API to API
+
+4. Added the projects to a solution file, for better debugging and development purposes:
+dotnet new sln
+dotnet sln order-service-lambda.sln add src/API test/API.Tests
+
