@@ -11,7 +11,7 @@ namespace API.Controllers
     {
         // GET api/values
         [HttpGet]
-        public IEnumerable<string> Get()
+        public IEnumerable<string> Get([FromQuery] List<string> type)
         {
             return new string[] { "value1", "value2" };
         }

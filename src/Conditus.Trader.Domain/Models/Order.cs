@@ -2,20 +2,20 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using Amazon.DynamoDBv2.DataModel;
 using Conditus.Trader.Domain.Enums;
+using Conditus.Trader.Domain.PropertyConverters;
 
 namespace Conditus.Trader.Domain.Models
 {
     [DynamoDBTable("Orders")]
     public class Order
     {
-        [DynamoDBHashKey]
+        
+        [DynamoDBProperty]
         public string Id { get; set; }
         [DynamoDBProperty]
-        [DynamoDBRangeKey]
         [Required]
         public string PortfolioId { get; set; }
-        [DynamoDBProperty]
-        [DynamoDBRangeKey]
+        [DynamoDBHashKey]
         [Required]
         public string CreatedBy { get; set; }
         [DynamoDBProperty]
@@ -38,10 +38,10 @@ namespace Conditus.Trader.Domain.Models
         [DynamoDBProperty]
         [Required]
         public string Currency { get; set; }
-        [DynamoDBProperty]
+        [DynamoDBRangeKey(typeof(DateTimePropertyConverter))]
         [Required]
         public DateTime CreatedAt { get; set; }
-        [DynamoDBProperty]
+        [DynamoDBProperty(typeof(DateTimePropertyConverter))]
         public DateTime? CompletedAt { get; set; }
         [DynamoDBProperty]
         [Required]

@@ -46,12 +46,12 @@ namespace Database.Migrations
                     new AttributeDefinition
                     {
                         AttributeName = "Status",
-                        AttributeType = ScalarAttributeType.S
+                        AttributeType = ScalarAttributeType.N
                     },
                     new AttributeDefinition
                     {
                         AttributeName = "Type",
-                        AttributeType = ScalarAttributeType.S
+                        AttributeType = ScalarAttributeType.N
                     },
                     new AttributeDefinition
                     {
