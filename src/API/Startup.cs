@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Business;
+using DataAccess;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -27,7 +29,14 @@ namespace API
         public void ConfigureServices(IServiceCollection services)
         {
             services
-                .AddDynamoDB(Configuration);
+                .AddBusinessDependencies()
+                .AddDataAccessDependencies(Configuration)
+                .AddApiVersioning(options =>
+                {
+                    options.AssumeDefaultVersionWhenUnspecified = true;
+                    options.ReportApiVersions = true;
+                    options.DefaultApiVersion = new ApiVersion(1, 0);
+                });
 
             services.AddControllers();
         }

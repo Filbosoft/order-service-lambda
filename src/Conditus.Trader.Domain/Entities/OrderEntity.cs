@@ -24,7 +24,6 @@ namespace Conditus.Trader.Domain.Entities
         [Required]
         public string AssetSymbol { get; set; }
         [DynamoDBProperty]
-        [Required]
         public AssetType AssetType { get; set; }
         [DynamoDBProperty]
         [Required]
