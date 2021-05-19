@@ -24,5 +24,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\API\API.csproj" />
     <ProjectReference Include="..\..\src\Conditus.Trader.Domain\Conditus.Trader.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Business\Business.csproj" />
+    <ProjectReference Include="..\..\src\DataAccess\DataAccess.csproj" />
   </ItemGroup>
 </Project>

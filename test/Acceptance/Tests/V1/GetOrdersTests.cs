@@ -20,13 +20,11 @@ namespace Acceptance.Tests.V1
         private readonly IDynamoDBContext _dbContext;
         private const string BASE_URL = "api/v1";
         public CustomWebApplicationFactory<Startup> _factory;
-        
-        
 
         public GetOrdersTests(CustomWebApplicationFactory<Startup> factory)
         {
             _factory = factory;
-            _client = factory.CreateClient();
+            _client = factory.CreateAuthorizedClient();
             _dbContext = factory.GetDynamoDBContext();
 
             Seed();
@@ -35,6 +33,7 @@ namespace Acceptance.Tests.V1
         public void Dispose()
         {
             _dbContext.Dispose();
+            _factory.Dispose();
         }
 
         /***
@@ -60,7 +59,7 @@ namespace Acceptance.Tests.V1
             Id = "e365a51c-b176-494f-8506-1c80cb84a69b",
             CreatedBy = User1Id,
             PortfolioId = User1Portfolio1Id,
-            AssetId = Stock1Id,
+            AssetSymbol = Stock1Id,
             AssetType = AssetType.Stock,
             Type = OrderType.Buy,
             Status = OrderStatus.Completed,
@@ -139,7 +138,7 @@ namespace Acceptance.Tests.V1
         public async void GetOrders_WithAssetId_ShouldReturnUserOrdersFilteredByAssetId()
         {
             //Given
-            var query = $"assetId={Stock1Id}";
+            var query = $"assetSymbol={Stock1Id}";
             var uri = $"{BASE_URL}?{query}";
 
             //When
@@ -150,7 +149,7 @@ namespace Acceptance.Tests.V1
             var orders = await httpResponse.GetDeserializedResponseBodyAsync<IEnumerable<Order>>();
 
             orders.Should().NotBeNullOrEmpty()
-                .And.OnlyContain(o => o.AssetId.Equals(Stock1Id))
+                .And.OnlyContain(o => o.AssetSymbol.Equals(Stock1Id))
                 .And.OnlyContain(o => o.CreatedBy.Equals(User1Id));
         }
 

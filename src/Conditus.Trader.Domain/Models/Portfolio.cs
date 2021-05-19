@@ -1,22 +1,19 @@
-using System.ComponentModel.DataAnnotations;
-using Amazon.DynamoDBv2.DataModel;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace Conditus.Trader.Domain.Models
 {
-    [DynamoDBTable("Portfolios")]
-    public class Portfolio
+    public class PortfolioDetail
     {
-        [DynamoDBHashKey]
         public string Id { get; set; }
-        [Required]
-        [DynamoDBProperty]
         public string Name { get; set; }
-        [Required]
-        [DynamoDBProperty]
-        [DynamoDBRangeKey]
-        public string OwnerId { get; set; }
-        [Required]
-        [DynamoDBProperty]
-        public string Currency { get; set; }
+        public decimal Capital { get; set; }
+        public IEnumerable<PortfolioAsset> Assets { get; set; }
+    }
+
+    public class PortfolioOverview
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
     }
 }

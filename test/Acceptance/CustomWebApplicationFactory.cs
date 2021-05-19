@@ -14,23 +14,27 @@ using System.Threading.Tasks;
 using System.Net.Http;
 using Amazon.Runtime;
 using Acceptance.Utilities;
+using Business;
+using Acceptance.FakeRepositories;
 
 namespace Acceptance
 {
     public class CustomWebApplicationFactory<TStartup> : WebApplicationFactory<Startup>, IDisposable
     {
         private IConfiguration Configuration;
+        private CognitoTestConfig CognitoTestConfig;
 
         public CustomWebApplicationFactory()
         {
             /***
-            * Gets the configuration from the appsettings.json placed in the Api/conf folder.
+            * Gets the configuration from the appsettings.Testing.json placed in the Api/conf folder.
             ***/
             var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Testing";
             Configuration = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.json", optional: false)
+                .AddJsonFile($"appsettings.{env}.json", optional: false)
                 .Build();
 
+            CognitoTestConfig = GetCognitoTestConfig();
         }
 
         public new void Dispose()
@@ -44,8 +48,16 @@ namespace Acceptance
             .UseEnvironment("Testing")
             .ConfigureServices(services =>
             {
-
+                services.AddScoped<IPortfolioRepository, FakePortfolioRepository>();
             });
+        }
+
+        private CognitoTestConfig GetCognitoTestConfig()
+        {
+            var cognitoTestConfig = Configuration.GetSection("Cognito")
+                .Get<CognitoTestConfig>();
+
+            return cognitoTestConfig;
         }
 
         public IAmazonDynamoDB GetDynamoDB()
@@ -81,11 +93,8 @@ namespace Acceptance
 
         public async Task<string> GetTestUserToken()
         {
-            var cognitoTestConfig = Configuration.GetSection("Cognito")
-                .Get<CognitoTestConfig>();
-
-            var user = GetTestUser(cognitoTestConfig);
-            var authRequest = new InitiateSrpAuthRequest{Password = cognitoTestConfig.TestUserPassword};
+            var user = GetTestUser(CognitoTestConfig);
+            var authRequest = new InitiateSrpAuthRequest{Password = CognitoTestConfig.TestUserPassword};
 
             var authResponse = await user.StartWithSrpAuthAsync(authRequest).ConfigureAwait(false);
             var token = authResponse.AuthenticationResult.IdToken;
@@ -107,6 +116,13 @@ namespace Acceptance
                 provider);
 
             return user;
+        }
+
+        public string GetTestUserId()
+        {
+            var testUserId = CognitoTestConfig.TestUserId;
+
+            return testUserId;
         }
     }
 }

@@ -55,7 +55,7 @@ namespace Database.Migrations
                     },
                     new AttributeDefinition
                     {
-                        AttributeName = "AssetId",
+                        AttributeName = "AssetSymbol",
                         AttributeType = ScalarAttributeType.S
                     },
                     new AttributeDefinition

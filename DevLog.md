@@ -23,3 +23,16 @@ So to sum up the plan: Make use of the WebApplicationFactory as used when integr
 
 Update #1:
 It seems to work for simple tests with no dependencies. It correctly shutdown the test server after test.
+
+## 19/05/2021 [PB] - Create & read order functionality
+Today I will start implementing create and read of orders.  
+
+Steps:
+- Create acceptance tests for create
+- Determine if there's a need for layered architecture.
+
+**Decision: Layered architecture**  
+This will be a micro service and should therefore be as simple as possible, but there's still quite a lot of functionality which needs to be implemented, and say we wish to implement graphql in the future, it would be nice to have a separate business layer at least. The data access layer won't make much sense as the business logic is how to query and insert data in the database, and will therefore be in the business layer.  
+But accessing the portfolio and asset services should probably go through a DAL, so a DAL layer might be useful just for handling dependencies to other services.
+
+**Conclusion:** The service will include a presentation layer in form of a rest API, a business layer including db requests and a DAL to handle communication with the other services.
