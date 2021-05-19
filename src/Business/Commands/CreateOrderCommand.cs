@@ -29,14 +29,30 @@ namespace Business.Commands
     public class CreateOrderCommandHandler : IHandlerWrapper<CreateOrderCommand, OrderDetail>
     {
         private readonly IMapper _mapper;
-        public CreateOrderCommandHandler(IMapper mapper)
+        private readonly IAssetRepository _assetRepository;
+        private readonly IPortfolioRepository _portfolioRepository;
+
+        public CreateOrderCommandHandler(IMapper mapper, IAssetRepository assetRepository, IPortfolioRepository portfolioRepository)
         {
             _mapper = mapper;
+            _assetRepository = assetRepository;
+            _portfolioRepository = portfolioRepository;
         }
 
         public async Task<BusinessResponse<OrderDetail>> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
         {
+            var portfolio = await _portfolioRepository.GetPortfolioById(request.PortfolioId);
+            if (portfolio == null)
+                return BusinessResponse.Fail<OrderDetail>("Error occurred trying to get portfolio");
+
+            var asset = await _assetRepository.GetAssetBySymbol(request.AssetSymbol);
+            if (asset == null)
+                return BusinessResponse.Fail<OrderDetail>("Error occurred trying to get asset");
+
             var entity = _mapper.Map<OrderEntity>(request);
+            entity.AssetName = asset.Name;
+            
+
             Order placedOrder;
 
             try
