@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using API;
 using Microsoft.Extensions.Configuration;
-using System.Data.Common;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.CognitoIdentityProvider;
@@ -48,7 +47,10 @@ namespace Acceptance
             .UseEnvironment("Testing")
             .ConfigureServices(services =>
             {
-                services.AddScoped<IPortfolioRepository, FakePortfolioRepository>();
+                services
+                    .AddScoped<IPortfolioRepository, FakePortfolioRepository>()
+                    .AddScoped<IAssetRepository, FakeAssetRepository>()
+                    .AddScoped<ICurrencyRepository, FakeCurrencyRepository>();
             });
         }
 
@@ -110,7 +112,7 @@ namespace Acceptance
                 config.ClientId,
                 provider);
             var user = new CognitoUser(
-                config.TestUserId,
+                config.TestUsername,
                 config.ClientId,
                 userPool,
                 provider);

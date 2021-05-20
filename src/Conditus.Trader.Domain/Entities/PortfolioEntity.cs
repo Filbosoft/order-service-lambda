@@ -21,6 +21,6 @@ namespace Conditus.Trader.Domain.Entities
         [DynamoDBProperty]
         public decimal Capital { get; set; }
         [DynamoDBProperty(typeof(ListMapPropertyConverter<PortfolioAsset>))]
-        public IEnumerable<PortfolioAsset> Assets { get; set; } = new List<PortfolioAsset>();
+        public List<PortfolioAsset> Assets { get; set; } = new List<PortfolioAsset>();
     }
 }

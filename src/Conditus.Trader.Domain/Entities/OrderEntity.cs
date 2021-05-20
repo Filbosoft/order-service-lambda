@@ -36,15 +36,12 @@ namespace Conditus.Trader.Domain.Entities
         [DynamoDBProperty]
         [Required]
         public decimal Price { get; set; }
-        [DynamoDBProperty]
-        [Required]
-        public string Currency { get; set; }
-        [DynamoDBRangeKey(typeof(DateTimePropertyConverter))]
+        [DynamoDBRangeKey(typeof(UTCDateTimePropertyConverter))]
         [Required]
         public DateTime CreatedAt { get; set; }
-        [DynamoDBProperty(typeof(DateTimePropertyConverter))]
+        [DynamoDBProperty(typeof(UTCDateTimePropertyConverter))]
         public DateTime? CompletedAt { get; set; }
-        [DynamoDBProperty]
+        [DynamoDBProperty(typeof(UTCDateTimePropertyConverter))]
         [Required]
         public DateTime ExpiresAt { get; set; }
     }

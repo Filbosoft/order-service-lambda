@@ -5,6 +5,6 @@ namespace Business
 {
     public interface IAssetRepository
     {
-        Task<AssetDetail> GetAssetBySymbol(string assetId);
+        Task<AssetDetail> GetAssetBySymbol(string symbol);
     }
 }

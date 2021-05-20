@@ -4,7 +4,7 @@ using Amazon.DynamoDBv2.DocumentModel;
 
 namespace Conditus.Trader.Domain.PropertyConverters
 {
-    public class DateTimePropertyConverter : IPropertyConverter
+    public class UTCDateTimePropertyConverter : IPropertyConverter
     {
         public object FromEntry(DynamoDBEntry entry)
         {
@@ -20,7 +20,8 @@ namespace Conditus.Trader.Domain.PropertyConverters
 
         public DynamoDBEntry ToEntry(object value)
         {
-            if (value == null) return new Primitive { Value = null};
+            if (value == null) 
+                return new Primitive { Value = null};
             
             var stringValue = value.ToString();
 

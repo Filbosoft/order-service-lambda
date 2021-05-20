@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using API.Infrastructure.Pipeline;
 using Business;
 using DataAccess;
+using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -28,7 +31,19 @@ namespace API
         // This method gets called by the runtime. Use this method to add services to the container
         public void ConfigureServices(IServiceCollection services)
         {
+            var authOptions = Configuration.GetSection("Auth")
+                .Get<JwtBearerOptions>();
+            
+            services.AddAuthentication("Bearer")
+                .AddJwtBearer(options => 
+                {
+                    options.Audience = authOptions.Audience;
+                    options.Authority = authOptions.Authority;
+                });
+
             services
+                .AddHttpContextAccessor()
+                .ConfigureMediatRPipeline()
                 .AddBusinessDependencies()
                 .AddDataAccessDependencies(Configuration)
                 .AddApiVersioning(options =>
@@ -53,6 +68,7 @@ namespace API
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>

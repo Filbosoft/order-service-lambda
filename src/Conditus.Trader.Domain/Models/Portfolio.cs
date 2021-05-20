@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 
 namespace Conditus.Trader.Domain.Models
@@ -8,7 +7,7 @@ namespace Conditus.Trader.Domain.Models
         public string Id { get; set; }
         public string Name { get; set; }
         public decimal Capital { get; set; }
-        public IEnumerable<PortfolioAsset> Assets { get; set; }
+        public List<PortfolioAsset> Assets { get; set; }
     }
 
     public class PortfolioOverview

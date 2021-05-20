@@ -12,6 +12,7 @@ namespace Business
             
             services
                 .AddMediatR(executingAssembly)
+                // .AddMediatR(typeof(Business.Validation.Requests))
                 .AddAutoMapper(executingAssembly);
 
             return services;

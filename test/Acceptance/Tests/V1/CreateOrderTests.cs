@@ -71,23 +71,23 @@ namespace Acceptance.Tests.V1
                 order.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, 60000);
                 order.AssetType.Should().Be(DKK_STOCK.Type);
                 order.Status.Should().Be(OrderStatus.Active);
-                order.Currency.Should().Be(DKK_STOCK.Currency.Code);
             }
 
-            var dbOrder = await _dbContext.LoadAsync<OrderEntity>(order.Id, order.CreatedAt);
+            var dbOrder = await _dbContext.LoadAsync<OrderEntity>(_testUserId, order.CreatedAt);
 
             using (new AssertionScope())
             {
                 dbOrder.Should().NotBeNull()
                     .And.BeEquivalentTo(createOrderCommand, o =>
-                        o.ExcludingMissingMembers());
+                        o.ExcludingMissingMembers()
+                        .Excluding(o => o.ExpiresAt));
 
                 dbOrder.Id.Should().NotBeNullOrEmpty();
                 dbOrder.CreatedBy.Should().Be(_testUserId);
                 dbOrder.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, 60000);
+                dbOrder.ExpiresAt.Should().BeCloseTo(createOrderCommand.ExpiresAt, 1000);
                 dbOrder.AssetType.Should().Be(DKK_STOCK.Type);
                 dbOrder.Status.Should().Be(OrderStatus.Active);
-                dbOrder.Currency.Should().Be(DKK_STOCK.Currency.Code);
             }
         }
 
@@ -144,23 +144,23 @@ namespace Acceptance.Tests.V1
                 order.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, 60000);
                 order.AssetType.Should().Be(DKK_STOCK.Type);
                 order.Status.Should().Be(OrderStatus.Active);
-                order.Currency.Should().Be(DKK_STOCK.Currency.Code);
             }
 
-            var dbOrder = await _dbContext.LoadAsync<OrderEntity>(order.Id, order.CreatedAt);
+            var dbOrder = await _dbContext.LoadAsync<OrderEntity>(_testUserId, order.CreatedAt);
 
             using (new AssertionScope())
             {
                 dbOrder.Should().NotBeNull()
                     .And.BeEquivalentTo(createOrderCommand, o =>
-                        o.ExcludingMissingMembers());
+                        o.ExcludingMissingMembers()
+                        .Excluding(o => o.ExpiresAt));
 
                 dbOrder.Id.Should().NotBeNullOrEmpty();
                 dbOrder.CreatedBy.Should().Be(_testUserId);
                 dbOrder.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, 60000);
+                dbOrder.ExpiresAt.Should().BeCloseTo(createOrderCommand.ExpiresAt, 1000);
                 dbOrder.AssetType.Should().Be(DKK_STOCK.Type);
                 dbOrder.Status.Should().Be(OrderStatus.Active);
-                dbOrder.Currency.Should().Be(DKK_STOCK.Currency.Code);
             }
         }
 

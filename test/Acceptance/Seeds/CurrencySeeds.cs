@@ -6,6 +6,8 @@ namespace Acceptance.Seeds
 {
     public static class CurrencySeeds
     {
+        public const decimal COVERSION_RATE = 5M;
+        
         public static readonly Currency DKK = new Currency
         {
             Code = "DKK",
