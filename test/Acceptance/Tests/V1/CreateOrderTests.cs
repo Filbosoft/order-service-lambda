@@ -14,7 +14,7 @@ using Acceptance.Utilities;
 using Business.Commands;
 using FluentAssertions.Execution;
 
-using static Acceptance.Tests.V1.TestConstants;
+using static Acceptance.Utilities.TestConstants;
 using static Acceptance.Seeds.AssetSeeds;
 using static Acceptance.Seeds.PortfolioSeeds;
 using Conditus.Trader.Domain.Entities;
@@ -25,13 +25,11 @@ namespace Acceptance.Tests.V1
     {
         private readonly HttpClient _client;
         private readonly IDynamoDBContext _dbContext;
-        private readonly string _testUserId;
 
         public CreateOrderTests(CustomWebApplicationFactory<Startup> factory)
         {
             _client = factory.CreateAuthorizedClient();
             _dbContext = factory.GetDynamoDBContext();
-            _testUserId = factory.GetTestUserId();
         }
 
         public void Dispose()
@@ -50,7 +48,7 @@ namespace Acceptance.Tests.V1
                 AssetSymbol = DKK_STOCK.Symbol,
                 Price = 100.1M,
                 Quantity = 1,
-                PortfolioId = TESTUSERS_PORTFOLIO.Id,
+                PortfolioId = TESTUSER_PORTFOLIO.Id,
                 ExpiresAt = DateTime.UtcNow.AddDays(1)
             };
 
@@ -73,7 +71,7 @@ namespace Acceptance.Tests.V1
                 order.Status.Should().Be(OrderStatus.Active);
             }
 
-            var dbOrder = await _dbContext.LoadAsync<OrderEntity>(_testUserId, order.CreatedAt);
+            var dbOrder = await _dbContext.LoadAsync<OrderEntity>(TESTUSER_ID, order.CreatedAt);
 
             using (new AssertionScope())
             {
@@ -83,7 +81,7 @@ namespace Acceptance.Tests.V1
                         .Excluding(o => o.ExpiresAt));
 
                 dbOrder.Id.Should().NotBeNullOrEmpty();
-                dbOrder.CreatedBy.Should().Be(_testUserId);
+                dbOrder.CreatedBy.Should().Be(TESTUSER_ID);
                 dbOrder.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, 60000);
                 dbOrder.ExpiresAt.Should().BeCloseTo(createOrderCommand.ExpiresAt, 1000);
                 dbOrder.AssetType.Should().Be(DKK_STOCK.Type);
@@ -95,14 +93,14 @@ namespace Acceptance.Tests.V1
         public async void CreateBuyOrder_WithInsufficientCapitalInPortfolio_ShouldReturnBadRequest()
         {
             //Given
-            var price = TESTUSERS_PORTFOLIO.Capital + 1;
+            var price = TESTUSER_PORTFOLIO.Capital + 1;
             var createOrderCommand = new CreateOrderCommand
             {
                 Type = OrderType.Buy,
                 AssetSymbol = DKK_STOCK.Symbol,
                 Price = price,
                 Quantity = 1,
-                PortfolioId = TESTUSERS_PORTFOLIO.Id,
+                PortfolioId = TESTUSER_PORTFOLIO.Id,
                 ExpiresAt = DateTime.UtcNow.AddDays(1)
             };
 
@@ -123,7 +121,7 @@ namespace Acceptance.Tests.V1
                 AssetSymbol = DKK_STOCK.Symbol,
                 Price = 100.1M,
                 Quantity = 100,
-                PortfolioId = TESTUSERS_PORTFOLIO.Id,
+                PortfolioId = TESTUSER_PORTFOLIO.Id,
                 ExpiresAt = DateTime.UtcNow.AddDays(1)
             };
 
@@ -146,7 +144,7 @@ namespace Acceptance.Tests.V1
                 order.Status.Should().Be(OrderStatus.Active);
             }
 
-            var dbOrder = await _dbContext.LoadAsync<OrderEntity>(_testUserId, order.CreatedAt);
+            var dbOrder = await _dbContext.LoadAsync<OrderEntity>(TESTUSER_ID, order.CreatedAt);
 
             using (new AssertionScope())
             {
@@ -156,7 +154,7 @@ namespace Acceptance.Tests.V1
                         .Excluding(o => o.ExpiresAt));
 
                 dbOrder.Id.Should().NotBeNullOrEmpty();
-                dbOrder.CreatedBy.Should().Be(_testUserId);
+                dbOrder.CreatedBy.Should().Be(TESTUSER_ID);
                 dbOrder.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, 60000);
                 dbOrder.ExpiresAt.Should().BeCloseTo(createOrderCommand.ExpiresAt, 1000);
                 dbOrder.AssetType.Should().Be(DKK_STOCK.Type);
@@ -175,7 +173,7 @@ namespace Acceptance.Tests.V1
                 AssetSymbol = DKK_STOCK.Symbol,
                 Price = 100.1M,
                 Quantity = quantity,
-                PortfolioId = TESTUSERS_PORTFOLIO.Id,
+                PortfolioId = TESTUSER_PORTFOLIO.Id,
                 ExpiresAt = DateTime.UtcNow.AddDays(1)
             };
 
@@ -217,7 +215,7 @@ namespace Acceptance.Tests.V1
                 AssetSymbol = DKK_STOCK.Symbol,
                 Price = 100.1M,
                 Quantity = 1,
-                PortfolioId = NOT_TESTUSERS_PORTFOLIO.Id,
+                PortfolioId = NONTESTUSER_PORTFOLIO.Id,
                 ExpiresAt = DateTime.UtcNow.AddDays(1)
             };
 

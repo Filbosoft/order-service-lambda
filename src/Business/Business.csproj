@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Conditus.Trader.Domain\Conditus.Trader.Domain.csproj" />
+    <ProjectReference Include="..\Database\Database.csproj" />
   </ItemGroup>
 
   <ItemGroup>

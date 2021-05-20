@@ -4,7 +4,6 @@ namespace Acceptance.Utilities
     {
         public string ClientId { get; set; }
         public string UserPoolId { get; set; }
-        public string TestUserId { get; set; }
         public string TestUsername { get; set; }
         public string TestUserPassword { get; set; }
     }

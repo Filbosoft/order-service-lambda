@@ -12,13 +12,19 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Acceptance.Utilities;
 
+using Conditus.Trader.Domain.Entities;
+
+using static Acceptance.Utilities.TestConstants;
+using static Acceptance.Seeds.OrderSeeds;
+using static Acceptance.Seeds.PortfolioSeeds;
+using static Acceptance.Seeds.AssetSeeds;
+
 namespace Acceptance.Tests.V1
 {
     public class GetOrdersTests : IClassFixture<CustomWebApplicationFactory<Startup>>, IDisposable
     {
         private readonly HttpClient _client;
         private readonly IDynamoDBContext _dbContext;
-        private const string BASE_URL = "api/v1";
         public CustomWebApplicationFactory<Startup> _factory;
 
         public GetOrdersTests(CustomWebApplicationFactory<Startup> factory)
@@ -27,246 +33,214 @@ namespace Acceptance.Tests.V1
             _client = factory.CreateAuthorizedClient();
             _dbContext = factory.GetDynamoDBContext();
 
-            // Seed();
+            Seed();
         }
 
         public void Dispose()
         {
+            _client.Dispose();
             _dbContext.Dispose();
-            _factory.Dispose();
         }
 
-        /***
-        * Seed values
-        ***/
+        private async void Seed()
+        {
+            var seedOrders = new List<OrderEntity>
+            {
+                ACTIVE_BUY_ORDER,
+                COMPLETED_BUY_ORDER,
+                ACTIVE_SELL_ORDER,
+                COMPLETED_SELL_ORDER,
+                OLD_ORDER,
+                TEN_YEAR_OLD_ORDER,
+                COMPLETED_NONUSER_ORDER,
+                COMPLETED_ORDER_FROM_ANOTHER_PORTFOLIO,
+                COMPLETED_NONEXISTING_ASSET_ORDER,
+                ORDER_COMPLETED_TODAY
+            };
 
-        // private const string User1Id = "c525999f-840b-48b3-8b42-fe466ada9a45";
-        // private const string User1Portfolio1Id = "a8f0914b-13c4-4de2-bd6b-c85f978ab9d3";
-        // private const string User1Portfolio2Id = "565eabea-91b0-495f-848a-98e6979d63f2";
-        // private const string User2Id = "32971179-33fd-496a-81a6-9eb9a90cc59c";
-        // private const string User2Portfolio1Id = "95e54e8e-606a-40cd-b29e-01b2aff646dc";
-        // private const string User2Portfolio2Id = "8aa715fb-804e-4d6e-9d60-7f2b4b2af4a7";
+            var batchWrite = _dbContext.CreateBatchWrite<OrderEntity>();
+            batchWrite.AddPutItems(seedOrders);
 
+            await batchWrite.ExecuteAsync();
+        }
 
-        // private const string Stock1Id = "4af4d567-2f92-425a-89ee-dfc12d77aba8";
-        // private const string Stock2Id = "67dbae27-2ad7-48ef-ba13-b6df7bb25cb8";
+        [Fact]
+        public async void GetOrders_WithoutQueryParameters_ShouldReturnUserOrders10YearsBack()
+        {
+            //Given
+            //Orders seeded
+            var dbOrders = await _dbContext.ScanAsync<OrderEntity>(new List<ScanCondition>()).GetRemainingAsync();
 
-        // private const string Valuta1Id = "74dbdfb4-81e8-49f4-920b-8b94b953aada";
-        // private const string Valuta2Id = "9b1b1f96-aa22-4499-b21c-281302fa46d8";
+            //When
+            var httpResponse = await _client.GetAsync(BASE_URL);
 
-        // private readonly Order Order1 = new Order
-        // {
-        //     Id = "e365a51c-b176-494f-8506-1c80cb84a69b",
-        //     CreatedBy = User1Id,
-        //     PortfolioId = User1Portfolio1Id,
-        //     AssetSymbol = Stock1Id,
-        //     AssetType = AssetType.Stock,
-        //     Type = OrderType.Buy,
-        //     Status = OrderStatus.Completed,
-        //     Currency = "DKK",
-        //     Price = 100M,
-        //     Quantity = 10,
-        //     CreatedAt = Convert.ToDateTime("2/5/2021 08:00:00 AM"),
-        //     CompletedAt = Convert.ToDateTime("3/5/2021 08:00:00 AM")
-        // };
+            //Then
+            httpResponse.EnsureSuccessStatusCode();
+            var orders = await httpResponse.GetDeserializedResponseBodyAsync<IEnumerable<OrderOverview>>();
 
-        // private async void Seed()
-        // {
-        //     var seedOrders = new List<Order>
-        //     {
-        //         Order1
-        //     };
+            orders.Should().NotBeNullOrEmpty()
+                .And.Contain(o => o.Id.Equals(TEN_YEAR_OLD_ORDER.Id))
+                .And.NotContain(o => o.Id.Equals(OLD_ORDER.Id));
+        }
 
-        //     var batchWrite = _dbContext.CreateBatchWrite<Order>();
-        //     batchWrite.AddPutItems(seedOrders);
+        [Fact]
+        public async void GetOrders_WithPortfolioId_ShouldReturnAllPortfolioOrders()
+        {
+            //Given
+            var query = $"portfolioId={TESTUSER_PORTFOLIO}";
+            var uri = $"{BASE_URL}?{query}";
 
-        //     await batchWrite.ExecuteAsync();
-        // }
+            //When
+            var httpResponse = await _client.GetAsync(uri);
 
-        // [Fact]
-        // public async void GetOrders_WithoutQueryParameters_ShouldReturnAllUserOrders()
-        // {
-        //     var token = await _factory.GetTestUserToken();
-        //     //Given
-        //     //Orders seeded
+            //Then
+            httpResponse.EnsureSuccessStatusCode();
+            var orders = await httpResponse.GetDeserializedResponseBodyAsync<IEnumerable<OrderOverview>>();
 
-        //     //When
-        //     var httpResponse = await _client.GetAsync(BASE_URL);
+            orders.Should().NotBeNullOrEmpty()
+                .And.NotContain(o => o.Id.Equals(COMPLETED_ORDER_FROM_ANOTHER_PORTFOLIO));
+        }
 
-        //     //Then
-        //     httpResponse.EnsureSuccessStatusCode();
-        //     var orders = await httpResponse.GetDeserializedResponseBodyAsync<IEnumerable<Order>>();
+        [Fact]
+        public async void GetOrders_WithPortfolioIdWhichIsNotTestUsers_ShouldReturnBadRequest()
+        {
+            //Given
+            var query = $"portfolioId={NONTESTUSER_PORTFOLIO}";
+            var uri = $"{BASE_URL}?{query}";
 
-        //     orders.Should().NotBeNullOrEmpty()
-        //         .And.OnlyContain(o => o.CreatedBy.Equals(User1Id));
-        // }
+            //When
+            var httpResponse = await _client.GetAsync(uri);
 
-        // [Fact]
-        // public async void GetOrders_WithPortfolioId_ShouldReturnAllPortfolioOrders()
-        // {
-        //     //Given
-        //     var query = $"portfolioId={User1Portfolio1Id}";
-        //     var uri = $"{BASE_URL}?{query}";
+            //Then
+            httpResponse.StatusCode.Should().Equals(StatusCodes.Status400BadRequest);
+        }
 
-        //     //When
-        //     var httpResponse = await _client.GetAsync(uri);
+        [Fact]
+        public async void GetOrders_WithAssetId_ShouldReturnUserOrdersFilteredByAssetId()
+        {
+            //Given
+            var query = $"assetSymbol={DKK_STOCK.Symbol}";
+            var uri = $"{BASE_URL}?{query}";
 
-        //     //Then
-        //     httpResponse.EnsureSuccessStatusCode();
-        //     var orders = await httpResponse.GetDeserializedResponseBodyAsync<IEnumerable<Order>>();
+            //When
+            var httpResponse = await _client.GetAsync(uri);
 
-        //     orders.Should().NotBeNullOrEmpty()
-        //         .And.OnlyContain(o => o.PortfolioId.Equals(User1Portfolio1Id))
-        //         .And.OnlyContain(o => o.CreatedBy.Equals(User1Id));
-        // }
+            //Then
+            httpResponse.EnsureSuccessStatusCode();
+            var orders = await httpResponse.GetDeserializedResponseBodyAsync<IEnumerable<OrderOverview>>();
 
-        // [Fact]
-        // public async void GetOrders_WithPortfolioIdWhichIsNotUsers_ShouldReturnUnauthorized()
-        // {
-        //     //Given
-        //     var query = $"portfolioId={User2Portfolio1Id}";
-        //     var uri = $"{BASE_URL}?{query}";
+            orders.Should().NotBeNullOrEmpty()
+                .And.OnlyContain(o => o.AssetSymbol.Equals(DKK_STOCK.Symbol));
+        }
 
-        //     //When
-        //     var httpResponse = await _client.GetAsync(uri);
+        [Fact]
+        public async void GetOrders_WithType_ShouldReturnUserOrdersFilteredByType()
+        {
+            //Given
+            var query = $"type={OrderType.Buy}";
+            var uri = $"{BASE_URL}?{query}";
 
-        //     //Then
-        //     httpResponse.StatusCode.Should().Equals(StatusCodes.Status401Unauthorized);
-        // }
+            //When
+            var httpResponse = await _client.GetAsync(uri);
 
-        // [Fact]
-        // public async void GetOrders_WithAssetId_ShouldReturnUserOrdersFilteredByAssetId()
-        // {
-        //     //Given
-        //     var query = $"assetSymbol={Stock1Id}";
-        //     var uri = $"{BASE_URL}?{query}";
+            //Then
+            httpResponse.EnsureSuccessStatusCode();
+            var orders = await httpResponse.GetDeserializedResponseBodyAsync<IEnumerable<OrderOverview>>();
 
-        //     //When
-        //     var httpResponse = await _client.GetAsync(uri);
+            orders.Should().NotBeNullOrEmpty()
+                .And.OnlyContain(o => o.Type.Equals(OrderType.Buy));
+        }
 
-        //     //Then
-        //     httpResponse.EnsureSuccessStatusCode();
-        //     var orders = await httpResponse.GetDeserializedResponseBodyAsync<IEnumerable<Order>>();
+        [Fact]
+        public async void GetOrders_WithStatus_ShouldReturnUserOrdersFilteredByStatus()
+        {
+            //Given
+            var query = $"status={OrderStatus.Completed}";
+            var uri = $"{BASE_URL}?{query}";
 
-        //     orders.Should().NotBeNullOrEmpty()
-        //         .And.OnlyContain(o => o.AssetSymbol.Equals(Stock1Id))
-        //         .And.OnlyContain(o => o.CreatedBy.Equals(User1Id));
-        // }
+            //When
+            var httpResponse = await _client.GetAsync(uri);
 
-        // [Fact]
-        // public async void GetOrders_WithType_ShouldReturnUserOrdersFilteredByType()
-        // {
-        //     //Given
-        //     var query = $"type={OrderType.Buy}";
-        //     var uri = $"{BASE_URL}?{query}";
+            //Then
+            httpResponse.EnsureSuccessStatusCode();
+            var orders = await httpResponse.GetDeserializedResponseBodyAsync<IEnumerable<OrderOverview>>();
 
-        //     //When
-        //     var httpResponse = await _client.GetAsync(uri);
+            orders.Should().NotBeNullOrEmpty()
+                .And.OnlyContain(o => o.Status.Equals(OrderStatus.Completed));
+        }
 
-        //     //Then
-        //     httpResponse.EnsureSuccessStatusCode();
-        //     var orders = await httpResponse.GetDeserializedResponseBodyAsync<IEnumerable<Order>>();
+        [Fact]
+        public async void GetOrders_WithCreatedFromDate_ShouldReturnUserOrdersCreatedAfterThePassedDate()
+        {
+            //Given
+            var query = $"createdFromDate={COMPLETED_BUY_ORDER.CreatedAt}";
+            var uri = $"{BASE_URL}?{query}";
 
-        //     orders.Should().NotBeNullOrEmpty()
-        //         .And.OnlyContain(o => o.Type.Equals(OrderType.Buy))
-        //         .And.OnlyContain(o => o.CreatedBy.Equals(User1Id));
-        // }
+            //When
+            var httpResponse = await _client.GetAsync(uri);
 
-        // [Fact]
-        // public async void GetOrders_WithStatus_ShouldReturnUserOrdersFilteredByStatus()
-        // {
-        //     //Given
-        //     var query = $"status={OrderStatus.Completed}";
-        //     var uri = $"{BASE_URL}?{query}";
+            //Then
+            httpResponse.EnsureSuccessStatusCode();
+            var orders = await httpResponse.GetDeserializedResponseBodyAsync<IEnumerable<OrderOverview>>();
 
-        //     //When
-        //     var httpResponse = await _client.GetAsync(uri);
+            orders.Should().NotBeNullOrEmpty()
+                .And.OnlyContain(o => o.CreatedAt >= COMPLETED_BUY_ORDER.CreatedAt);
+        }
 
-        //     //Then
-        //     httpResponse.EnsureSuccessStatusCode();
-        //     var orders = await httpResponse.GetDeserializedResponseBodyAsync<IEnumerable<Order>>();
+        [Fact]
+        public async void GetOrders_WithCreatedToDate_ShouldReturnUserOrdersCreatedBeforeThePassedDate()
+        {
+            //Given
+            var createdToDate = COMPLETED_BUY_ORDER.CreatedAt;
+            var query = $"createdToDate={createdToDate}";
+            var uri = $"{BASE_URL}?{query}";
 
-        //     orders.Should().NotBeNullOrEmpty()
-        //         .And.OnlyContain(o => o.Status.Equals(OrderStatus.Completed))
-        //         .And.OnlyContain(o => o.CreatedBy.Equals(User1Id));
-        // }
+            //When
+            var httpResponse = await _client.GetAsync(uri);
 
-        // [Fact]
-        // public async void GetOrders_WithCreatedFromDate_ShouldReturnUserOrdersCreatedAfterThePassedDate()
-        // {
-        //     //Given
-        //     var query = $"createdFromDate={Order1.CreatedAt}";
-        //     var uri = $"{BASE_URL}?{query}";
+            //Then
+            httpResponse.EnsureSuccessStatusCode();
+            var orders = await httpResponse.GetDeserializedResponseBodyAsync<IEnumerable<OrderOverview>>();
 
-        //     //When
-        //     var httpResponse = await _client.GetAsync(uri);
+            orders.Should().NotBeNullOrEmpty()
+                .And.OnlyContain(o => o.CreatedAt <= createdToDate);
+        }
 
-        //     //Then
-        //     httpResponse.EnsureSuccessStatusCode();
-        //     var orders = await httpResponse.GetDeserializedResponseBodyAsync<IEnumerable<Order>>();
+        [Fact]
+        public async void GetOrders_WithCompletedFromDate_ShouldReturnUserOrdersCompletedAfterThePassedDate()
+        {
+            //Given
+            var query = $"completedFromDate={COMPLETED_BUY_ORDER.CompletedAt}";
+            var uri = $"{BASE_URL}?{query}";
 
-        //     orders.Should().NotBeNullOrEmpty()
-        //         .And.OnlyContain(o => o.CreatedAt >= Order1.CreatedAt)
-        //         .And.OnlyContain(o => o.CreatedBy.Equals(User1Id));
-        // }
+            //When
+            var httpResponse = await _client.GetAsync(uri);
 
-        // [Fact]
-        // public async void GetOrders_WithCreatedToDate_ShouldReturnUserOrdersCreatedBeforeThePassedDate()
-        // {
-        //     //Given
-        //     var createdToDate = Order1.CreatedAt.AddDays(5);
-        //     var query = $"createdToDate={createdToDate}";
-        //     var uri = $"{BASE_URL}?{query}";
+            //Then
+            httpResponse.EnsureSuccessStatusCode();
+            var orders = await httpResponse.GetDeserializedResponseBodyAsync<IEnumerable<OrderOverview>>();
 
-        //     //When
-        //     var httpResponse = await _client.GetAsync(uri);
+            orders.Should().NotBeNullOrEmpty()
+                .And.OnlyContain(o => o.CompletedAt >= COMPLETED_BUY_ORDER.CompletedAt);
+        }
 
-        //     //Then
-        //     httpResponse.EnsureSuccessStatusCode();
-        //     var orders = await httpResponse.GetDeserializedResponseBodyAsync<IEnumerable<Order>>();
+        [Fact]
+        public async void GetOrders_WithCompletedToDate_ShouldReturnUserOrdersCompletedBeforeThePassedDate()
+        {
+            //Given
+            var completedToDate = COMPLETED_BUY_ORDER.CompletedAt;
+            var query = $"completedToDate={completedToDate}";
+            var uri = $"{BASE_URL}?{query}";
 
-        //     orders.Should().NotBeNullOrEmpty()
-        //         .And.OnlyContain(o => o.CreatedAt <= createdToDate)
-        //         .And.OnlyContain(o => o.CreatedBy.Equals(User1Id));
-        // }
+            //When
+            var httpResponse = await _client.GetAsync(uri);
 
-        // [Fact]
-        // public async void GetOrders_WithCompletedFromDate_ShouldReturnUserOrdersCompletedAfterThePassedDate()
-        // {
-        //     //Given
-        //     var query = $"completedFromDate={Order1.CompletedAt}";
-        //     var uri = $"{BASE_URL}?{query}";
+            //Then
+            httpResponse.EnsureSuccessStatusCode();
+            var orders = await httpResponse.GetDeserializedResponseBodyAsync<IEnumerable<OrderOverview>>();
 
-        //     //When
-        //     var httpResponse = await _client.GetAsync(uri);
-
-        //     //Then
-        //     httpResponse.EnsureSuccessStatusCode();
-        //     var orders = await httpResponse.GetDeserializedResponseBodyAsync<IEnumerable<Order>>();
-
-        //     orders.Should().NotBeNullOrEmpty()
-        //         .And.OnlyContain(o => o.CompletedAt >= Order1.CompletedAt)
-        //         .And.OnlyContain(o => o.CreatedBy.Equals(User1Id));
-        // }
-
-        // [Fact]
-        // public async void GetOrders_WithCompletedToDate_ShouldReturnUserOrdersCompletedBeforeThePassedDate()
-        // {
-        //     //Given
-        //     var completedToDate = Order1.CompletedAt?.AddDays(5);
-        //     var query = $"completedToDate={completedToDate}";
-        //     var uri = $"{BASE_URL}?{query}";
-
-        //     //When
-        //     var httpResponse = await _client.GetAsync(uri);
-
-        //     //Then
-        //     httpResponse.EnsureSuccessStatusCode();
-        //     var orders = await httpResponse.GetDeserializedResponseBodyAsync<IEnumerable<Order>>();
-
-        //     orders.Should().NotBeNullOrEmpty()
-        //         .And.OnlyContain(o => o.CompletedAt <= completedToDate)
-        //         .And.OnlyContain(o => o.CreatedBy.Equals(User1Id));
-        // }
+            orders.Should().NotBeNullOrEmpty()
+                .And.OnlyContain(o => o.CompletedAt <= completedToDate);
+        }
     }
 }

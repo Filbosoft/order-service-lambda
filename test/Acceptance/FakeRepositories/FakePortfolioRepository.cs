@@ -12,7 +12,7 @@ namespace Acceptance.FakeRepositories
     {
         private static List<PortfolioDetail> TestUserPortfolios = new List<PortfolioDetail>
         {
-            TESTUSERS_PORTFOLIO
+            TESTUSER_PORTFOLIO
         };
 
         public async Task<PortfolioDetail> GetPortfolioById(string portfolioId)

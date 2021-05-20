@@ -125,7 +125,7 @@ namespace Database.Migrations
                             partitionKey,
                             new KeySchemaElement
                             {
-                                AttributeName = "AssetId",
+                                AttributeName = "AssetSymbol",
                                 KeyType = KeyType.RANGE
                             }
                         },

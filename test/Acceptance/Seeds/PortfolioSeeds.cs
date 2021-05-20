@@ -8,7 +8,7 @@ namespace Acceptance.Seeds
     public static class PortfolioSeeds
     {
         public const int TESTUSERS_PORTFOLIO_STOCK_QUANTITY = 100;        
-        public static readonly PortfolioDetail TESTUSERS_PORTFOLIO = new PortfolioDetail
+        public static readonly PortfolioDetail TESTUSER_PORTFOLIO = new PortfolioDetail
         {
             Id = "10b20561-de35-4bf4-84ee-b1452d431bcd",
             Name = "Testuser's portfolio",
@@ -19,7 +19,7 @@ namespace Acceptance.Seeds
             }
         };
 
-        public static readonly PortfolioDetail NOT_TESTUSERS_PORTFOLIO = new PortfolioDetail
+        public static readonly PortfolioDetail NONTESTUSER_PORTFOLIO = new PortfolioDetail
         {
             Id = "83c61b7a-df2f-43de-9272-a9f307dc4768",
             Name = "Not Testuser's portfolio",

@@ -119,12 +119,5 @@ namespace Acceptance
 
             return user;
         }
-
-        public string GetTestUserId()
-        {
-            var testUserId = CognitoTestConfig.TestUserId;
-
-            return testUserId;
-        }
     }
 }

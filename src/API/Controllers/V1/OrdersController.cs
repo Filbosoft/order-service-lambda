@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Business.Commands;
+using Business.Queries;
+using Conditus.Trader.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -40,6 +40,38 @@ namespace API.Controllers
         }
 
         // Get orders
+        [HttpGet]
+        public async Task<IActionResult> GetOrders(
+            [FromQuery] string portfolioId,
+            [FromQuery] OrderType? type,
+            [FromQuery] string assetSymbol,
+            [FromQuery] AssetType? assetType,
+            [FromQuery] OrderStatus? status,
+            [FromQuery] DateTime? createdFromDate,
+            [FromQuery] DateTime? createdToDate,
+            [FromQuery] DateTime? completedFromDate,
+            [FromQuery] DateTime? completedToDate)
+        {
+            var query = new GetOrdersQuery
+            {
+                PortfolioId = portfolioId,
+                Type = type,
+                AssetSymbol = assetSymbol,
+                AssetType = assetType,
+                Status = status,
+                CreatedFromDate = createdFromDate,
+                CreatedToDate = createdToDate,
+                CompletedFromDate = completedFromDate,
+                CompletedToDate = completedToDate
+            };
+            var response = await _mediator.Send(query);
+
+            if (response.IsError)
+                return NotFound(response.Message);
+
+            var orders = response.Data;
+            return Ok(orders);
+        }
         
         [HttpGet]
         [Route("{id}")]
