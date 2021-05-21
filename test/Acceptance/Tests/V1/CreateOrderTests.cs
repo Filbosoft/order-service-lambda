@@ -83,7 +83,7 @@ namespace Acceptance.Tests.V1
                 dbOrder.Id.Should().NotBeNullOrEmpty();
                 dbOrder.CreatedBy.Should().Be(TESTUSER_ID);
                 dbOrder.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, 60000);
-                dbOrder.ExpiresAt.Should().BeCloseTo(createOrderCommand.ExpiresAt, 1000);
+                dbOrder.ExpiresAt.Should().BeCloseTo((DateTime)createOrderCommand.ExpiresAt, 1000);
                 dbOrder.AssetType.Should().Be(DKK_STOCK.Type);
                 dbOrder.OrderStatus.Should().Be(OrderStatus.Active);
             }
@@ -156,7 +156,7 @@ namespace Acceptance.Tests.V1
                 dbOrder.Id.Should().NotBeNullOrEmpty();
                 dbOrder.CreatedBy.Should().Be(TESTUSER_ID);
                 dbOrder.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, 60000);
-                dbOrder.ExpiresAt.Should().BeCloseTo(createOrderCommand.ExpiresAt, 1000);
+                dbOrder.ExpiresAt.Should().BeCloseTo((DateTime)createOrderCommand.ExpiresAt, 1000);
                 dbOrder.AssetType.Should().Be(DKK_STOCK.Type);
                 dbOrder.OrderStatus.Should().Be(OrderStatus.Active);
             }
@@ -251,14 +251,29 @@ namespace Acceptance.Tests.V1
         }
 
         [Fact]
-        public void TestDefaultExpiresAtIsSet()
+        public async void CreateOrder_WithoutExpirationDate_ShouldReturnCreatedWithExpirationSetToOneDayFromCreatedAt()
         {
-            throw new NotImplementedException();
-            //Given
+            var createOrderCommand = new CreateOrderCommand
+            {
+                Type = OrderType.Sell,
+                AssetSymbol = DKK_STOCK.Symbol,
+                Price = 100.1M,
+                Quantity = 100,
+                PortfolioId = TESTUSER_PORTFOLIO.Id
+            };
 
             //When
+            var httpResponse = await _client.PostAsync(BASE_URL, HttpSerializer.GetStringContent(createOrderCommand));
 
             //Then
+            httpResponse.StatusCode.Should().Be(StatusCodes.Status201Created);
+            var order = await httpResponse.GetDeserializedResponseBodyAsync<OrderDetail>();
+
+            order.ExpiresAt.Should().BeCloseTo(DateTime.UtcNow.AddDays(1), 60000);
+
+            var dbOrder = await _dbContext.LoadAsync<OrderEntity>(TESTUSER_ID, order.CreatedAt);
+
+            dbOrder.ExpiresAt.Should().BeCloseTo(DateTime.UtcNow.AddDays(1), 60000);
         }
     }
 }

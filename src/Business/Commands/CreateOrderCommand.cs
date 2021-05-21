@@ -26,9 +26,8 @@ namespace Business.Commands
         public int Quantity { get; set; }
         [Required]
         public decimal Price { get; set; }
-        [Required]
         [DateTimeLaterThanUTCNowValidationAttribute]
-        public DateTime ExpiresAt { get; set; }
+        public DateTime? ExpiresAt { get; set; }
     }
 
     public class CreateOrderCommandHandler : IHandlerWrapper<CreateOrderCommand, OrderDetail>
