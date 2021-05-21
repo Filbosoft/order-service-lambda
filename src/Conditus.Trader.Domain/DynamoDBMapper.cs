@@ -103,12 +103,28 @@ namespace Conditus.Trader.Domain
             }
         }
 
+        public static AttributeValue GetAttributeValue(this DateTime dateTime)
+        {
+            var unixTime = GetUnixTimeMSFromDateTime(dateTime);
+            var value = new AttributeValue { N = unixTime.ToString() };
+
+            return value;
+        }
+
         public static long GetUnixTimeMSFromDateTime(DateTime dateTime)
         {
             var offset = new DateTimeOffset(dateTime, new TimeSpan());
             var unixTime = offset.ToUnixTimeMilliseconds();
 
             return unixTime;
+        }
+
+        public static AttributeValue GetAttributeValue(this Enum enumValue)
+        {
+            var numericValue = Convert.ToUInt32(enumValue);
+            var value = new AttributeValue { N = numericValue.ToString() };
+
+            return value;
         }
 
         public static AttributeValue GetAttributeValue(this Dictionary<string, AttributeValue> attributeMap, string key)

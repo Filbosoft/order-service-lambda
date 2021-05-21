@@ -1,4 +1,4 @@
-namespace Database
+namespace Database.Indexes
 {
     public static class GlobalIndexes
     {

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
-using Conditus.Trader.Domain.Models;
+using Database.Indexes;
 
 namespace Database.Migrations
 {
@@ -62,11 +62,6 @@ namespace Database.Migrations
                     new AttributeDefinition
                     {
                         AttributeName = "CreatedAt",
-                        AttributeType = ScalarAttributeType.N
-                    },
-                    new AttributeDefinition
-                    {
-                        AttributeName = "CompletedAt",
                         AttributeType = ScalarAttributeType.N
                     }
                 },
