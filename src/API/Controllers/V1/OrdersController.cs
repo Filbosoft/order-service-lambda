@@ -77,7 +77,14 @@ namespace API.Controllers
         [Route("{id}")]
         public async Task<IActionResult> GetOrderById([FromRoute] string id)
         {
-            throw new NotImplementedException();
+            var query = new GetOrderByIdQuery {OrderId = id};
+            var response = await _mediator.Send(query);
+
+            if (response.IsError)
+                return NotFound(response.Message);
+
+            var order = response.Data;
+            return Ok(order);
         }
 
         // Update order
