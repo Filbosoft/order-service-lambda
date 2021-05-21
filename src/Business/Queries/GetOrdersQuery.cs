@@ -71,7 +71,7 @@ namespace Business.Queries
             if (request.Type != null)
             {
                 KeyExpression = $"{nameof(OrderEntity.Type)} = :v_type";
-                if (!index.Equals(LocalIndexes.OrderTypeIndex)) FilterExpressions.Add(KeyExpression);
+                if (!index.Equals(LocalIndexes.UserOrderTypeIndex)) FilterExpressions.Add(KeyExpression);
 
                 query.ExpressionAttributeValues.Add(
                     ":v_type",
@@ -81,7 +81,7 @@ namespace Business.Queries
             if (request.Status != null)
             {
                 KeyExpression = $"{nameof(OrderEntity.Status)} = :v_status";
-                if (!index.Equals(LocalIndexes.OrderStatusIndex)) FilterExpressions.Add(KeyExpression);
+                if (!index.Equals(LocalIndexes.UserOrderStatusIndex)) FilterExpressions.Add(KeyExpression);
 
                 query.ExpressionAttributeValues.Add(
                     ":v_status",
@@ -91,7 +91,7 @@ namespace Business.Queries
             if (request.PortfolioId != null)
             {
                 KeyExpression = $"{nameof(OrderEntity.PortfolioId)} = :v_portfolio_id";
-                if (!index.Equals(LocalIndexes.OrderPortfolioIndex)) FilterExpressions.Add(KeyExpression);
+                if (!index.Equals(LocalIndexes.UserOrderPortfolioIndex)) FilterExpressions.Add(KeyExpression);
 
                 query.ExpressionAttributeValues.Add(
                     ":v_portfolio_id",
@@ -101,7 +101,7 @@ namespace Business.Queries
             if (request.AssetSymbol != null)
             {
                 KeyExpression = $"{nameof(OrderEntity.AssetSymbol)} = :v_asset_symbol";
-                if (!index.Equals(LocalIndexes.OrderAssetIndex)) FilterExpressions.Add(KeyExpression);
+                if (!index.Equals(LocalIndexes.UserOrderAssetIndex)) FilterExpressions.Add(KeyExpression);
 
                 query.ExpressionAttributeValues.Add(
                     ":v_asset_symbol",
@@ -163,19 +163,23 @@ namespace Business.Queries
             return BusinessResponse.Ok<IEnumerable<OrderOverview>>(orderOverviews);
         }
 
+        /***
+        * This function returns the index name of the index that will result in the least amount of records.
+        * As it's only possible to query one index at a time, it's important to choose the optimal one for the query.
+        ***/
         public string GetOptimalOrderIndex(GetOrdersQuery request)
         {
             if (request.AssetSymbol != null)
-                return LocalIndexes.OrderAssetIndex;
+                return LocalIndexes.UserOrderAssetIndex;
 
             if (request.PortfolioId != null)
-                return LocalIndexes.OrderPortfolioIndex;
+                return LocalIndexes.UserOrderPortfolioIndex;
 
             if (request.Status != null)
-                return LocalIndexes.OrderStatusIndex;
+                return LocalIndexes.UserOrderStatusIndex;
 
             if (request.Type != null)
-                return LocalIndexes.OrderTypeIndex;
+                return LocalIndexes.UserOrderTypeIndex;
             
             return null;
         }
