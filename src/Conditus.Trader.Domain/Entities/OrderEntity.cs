@@ -19,7 +19,7 @@ namespace Conditus.Trader.Domain.Entities
         public string CreatedBy { get; set; }
         [DynamoDBProperty]
         [Required]
-        public OrderType Type { get; set; }
+        public OrderType OrderType { get; set; } //Type is a keyword in dynamodb and can therefore not be used in expressions
         [DynamoDBProperty]
         [Required]
         public string AssetSymbol { get; set; }
@@ -31,17 +31,17 @@ namespace Conditus.Trader.Domain.Entities
         [DynamoDBProperty]
         [Required]
         public int Quantity { get; set; }
-        [DynamoDBProperty]
-        public OrderStatus Status { get; set; }
+        [DynamoDBProperty] 
+        public OrderStatus OrderStatus { get; set; } //Status is a keyword in dynamodb and can therefore not be used in expressions
         [DynamoDBProperty]
         [Required]
         public decimal Price { get; set; }
-        [DynamoDBRangeKey(typeof(UTCDateTimePropertyConverter))]
+        [DynamoDBRangeKey(typeof(DateTimePropertyConverter))]
         [Required]
         public DateTime CreatedAt { get; set; }
-        [DynamoDBProperty(typeof(UTCDateTimePropertyConverter))]
+        [DynamoDBProperty(typeof(DateTimePropertyConverter))]
         public DateTime? CompletedAt { get; set; }
-        [DynamoDBProperty(typeof(UTCDateTimePropertyConverter))]
+        [DynamoDBProperty(typeof(DateTimePropertyConverter))]
         [Required]
         public DateTime ExpiresAt { get; set; }
     }

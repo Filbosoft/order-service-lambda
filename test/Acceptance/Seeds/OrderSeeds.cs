@@ -17,12 +17,12 @@ namespace Acceptance.Seeds
             PortfolioId = TESTUSER_PORTFOLIO.Id,
             AssetSymbol = DKK_STOCK.Symbol,
             AssetType = DKK_STOCK.Type,
-            Type = OrderType.Buy,
-            Status = OrderStatus.Completed,
+            OrderType = OrderType.Buy,
+            OrderStatus = OrderStatus.Completed,
             Price = 100M,
             Quantity = 10,
-            CreatedAt = Convert.ToDateTime("2/5/2021 08:00:01 AM"),
-            CompletedAt = Convert.ToDateTime("3/5/2021 08:00:01 AM")
+            CreatedAt = Convert.ToDateTime("2/5/2021 08:00:01 AM").ToUniversalTime(),
+            CompletedAt = Convert.ToDateTime("3/5/2021 08:00:01 AM").ToUniversalTime()
         };
 
         public static readonly OrderEntity ACTIVE_BUY_ORDER = new OrderEntity
@@ -32,11 +32,11 @@ namespace Acceptance.Seeds
             PortfolioId = TESTUSER_PORTFOLIO.Id,
             AssetSymbol = DKK_STOCK.Symbol,
             AssetType = DKK_STOCK.Type,
-            Type = OrderType.Buy,
-            Status = OrderStatus.Active,
+            OrderType = OrderType.Buy,
+            OrderStatus = OrderStatus.Active,
             Price = 100M,
             Quantity = 10,
-            CreatedAt = Convert.ToDateTime("2/5/2021 08:00:02 AM")
+            CreatedAt = Convert.ToDateTime("2/5/2021 08:00:02 AM").ToUniversalTime()
         };
 
         public static readonly OrderEntity COMPLETED_SELL_ORDER = new OrderEntity
@@ -46,12 +46,12 @@ namespace Acceptance.Seeds
             PortfolioId = TESTUSER_PORTFOLIO.Id,
             AssetSymbol = DKK_STOCK.Symbol,
             AssetType = DKK_STOCK.Type,
-            Type = OrderType.Sell,
-            Status = OrderStatus.Completed,
+            OrderType = OrderType.Sell,
+            OrderStatus = OrderStatus.Completed,
             Price = 100M,
             Quantity = 10,
-            CreatedAt = Convert.ToDateTime("2/5/2021 08:00:03 AM"),
-            CompletedAt = Convert.ToDateTime("3/5/2021 08:00:03 AM")
+            CreatedAt = Convert.ToDateTime("2/5/2021 08:00:03 AM").ToUniversalTime(),
+            CompletedAt = Convert.ToDateTime("3/5/2021 08:00:03 AM").ToUniversalTime()
         };
 
         public static readonly OrderEntity ACTIVE_SELL_ORDER = new OrderEntity
@@ -61,11 +61,11 @@ namespace Acceptance.Seeds
             PortfolioId = TESTUSER_PORTFOLIO.Id,
             AssetSymbol = DKK_STOCK.Symbol,
             AssetType = DKK_STOCK.Type,
-            Type = OrderType.Sell,
-            Status = OrderStatus.Active,
+            OrderType = OrderType.Sell,
+            OrderStatus = OrderStatus.Active,
             Price = 100M,
             Quantity = 10,
-            CreatedAt = Convert.ToDateTime("2/5/2021 08:00:04 AM")
+            CreatedAt = Convert.ToDateTime("2/5/2021 08:00:04 AM").ToUniversalTime()
         };
 
         public static readonly OrderEntity OLD_ORDER = new OrderEntity
@@ -75,12 +75,12 @@ namespace Acceptance.Seeds
             PortfolioId = TESTUSER_PORTFOLIO.Id,
             AssetSymbol = DKK_STOCK.Symbol,
             AssetType = DKK_STOCK.Type,
-            Type = OrderType.Buy,
-            Status = OrderStatus.Completed,
+            OrderType = OrderType.Buy,
+            OrderStatus = OrderStatus.Completed,
             Price = 100M,
             Quantity = 10,
-            CreatedAt = Convert.ToDateTime("2/5/2000 08:00:05 AM"),
-            CompletedAt = Convert.ToDateTime("2/5/2000 08:01:00 AM")
+            CreatedAt = Convert.ToDateTime("2/5/2000 08:00:05 AM").ToUniversalTime(),
+            CompletedAt = Convert.ToDateTime("2/5/2000 08:01:00 AM").ToUniversalTime()
         };
         public static readonly OrderEntity TEN_YEAR_OLD_ORDER = new OrderEntity
         {
@@ -89,8 +89,8 @@ namespace Acceptance.Seeds
             PortfolioId = TESTUSER_PORTFOLIO.Id,
             AssetSymbol = DKK_STOCK.Symbol,
             AssetType = DKK_STOCK.Type,
-            Type = OrderType.Buy,
-            Status = OrderStatus.Completed,
+            OrderType = OrderType.Buy,
+            OrderStatus = OrderStatus.Completed,
             Price = 100M,
             Quantity = 10,
             CreatedAt = DateTime.UtcNow.AddYears(-10).AddDays(1),
@@ -104,12 +104,12 @@ namespace Acceptance.Seeds
             PortfolioId = NONTESTUSER_PORTFOLIO.Id,
             AssetSymbol = DKK_STOCK.Symbol,
             AssetType = DKK_STOCK.Type,
-            Type = OrderType.Buy,
-            Status = OrderStatus.Completed,
+            OrderType = OrderType.Buy,
+            OrderStatus = OrderStatus.Completed,
             Price = 100M,
             Quantity = 10,
-            CreatedAt = Convert.ToDateTime("2/5/2021 08:00:06 AM"),
-            CompletedAt = Convert.ToDateTime("3/5/2021 08:00:00 AM")
+            CreatedAt = Convert.ToDateTime("2/5/2021 08:00:06 AM").ToUniversalTime(),
+            CompletedAt = Convert.ToDateTime("3/5/2021 08:00:00 AM").ToUniversalTime()
         };
 
         public static readonly OrderEntity COMPLETED_ORDER_FROM_ANOTHER_PORTFOLIO = new OrderEntity
@@ -119,12 +119,12 @@ namespace Acceptance.Seeds
             PortfolioId = "1c440e1d-fbfd-4fcb-b72e-39bb05f5fdfa", //Doesn't exist
             AssetSymbol = DKK_STOCK.Symbol,
             AssetType = DKK_STOCK.Type,
-            Type = OrderType.Buy,
-            Status = OrderStatus.Completed,
+            OrderType = OrderType.Buy,
+            OrderStatus = OrderStatus.Completed,
             Price = 100M,
             Quantity = 10,
-            CreatedAt = Convert.ToDateTime("2/5/2021 08:00:07 AM"),
-            CompletedAt = Convert.ToDateTime("3/5/2021 08:00:00 AM")
+            CreatedAt = Convert.ToDateTime("2/5/2021 08:00:07 AM").ToUniversalTime(),
+            CompletedAt = Convert.ToDateTime("3/5/2021 08:00:00 AM").ToUniversalTime()
         };
 
         public static readonly OrderEntity COMPLETED_NONEXISTING_ASSET_ORDER = new OrderEntity
@@ -134,12 +134,12 @@ namespace Acceptance.Seeds
             PortfolioId = TESTUSER_PORTFOLIO.Id,
             AssetSymbol = "NonExistingAsset",
             AssetType = AssetType.Stock,
-            Type = OrderType.Buy,
-            Status = OrderStatus.Completed,
+            OrderType = OrderType.Buy,
+            OrderStatus = OrderStatus.Completed,
             Price = 100M,
             Quantity = 10,
-            CreatedAt = Convert.ToDateTime("2/5/2021 08:00:08 AM"),
-            CompletedAt = Convert.ToDateTime("3/5/2021 08:00:00 AM")
+            CreatedAt = Convert.ToDateTime("2/5/2021 08:00:08 AM").ToUniversalTime(),
+            CompletedAt = Convert.ToDateTime("3/5/2021 08:00:00 AM").ToUniversalTime()
         };
 
         public static readonly OrderEntity ORDER_COMPLETED_TODAY = new OrderEntity
@@ -149,8 +149,8 @@ namespace Acceptance.Seeds
             PortfolioId = TESTUSER_PORTFOLIO.Id,
             AssetSymbol = "NonExistingAsset",
             AssetType = AssetType.Stock,
-            Type = OrderType.Buy,
-            Status = OrderStatus.Completed,
+            OrderType = OrderType.Buy,
+            OrderStatus = OrderStatus.Completed,
             Price = 100M,
             Quantity = 10,
             CreatedAt = DateTime.UtcNow.AddMinutes(-10),

@@ -17,9 +17,29 @@ namespace Business.MappingProfiles
                 .ForMember(
                     entity => entity.CreatedAt,
                     opt => opt.MapFrom(command => command.RequestedAt)
+                )
+                .ForMember(
+                    entity => entity.OrderType,
+                    opt => opt.MapFrom(command => command.Type)
                 );
-            CreateMap<OrderEntity, OrderDetail>();
-            CreateMap<OrderEntity, OrderOverview>();
+            CreateMap<OrderEntity, OrderDetail>()
+                .ForMember(
+                    dest => dest.Status,
+                    opt => opt.MapFrom(entity => entity.OrderStatus)
+                )
+                .ForMember(
+                    dest => dest.Type,
+                    opt => opt.MapFrom(entity => entity.OrderType)
+                );
+            CreateMap<OrderEntity, OrderOverview>()
+                .ForMember(
+                    dest => dest.Status,
+                    opt => opt.MapFrom(entity => entity.OrderStatus)
+                )
+                .ForMember(
+                    dest => dest.Type,
+                    opt => opt.MapFrom(entity => entity.OrderType)
+                );
         }
     }
 }

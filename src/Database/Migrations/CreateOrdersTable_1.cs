@@ -14,6 +14,7 @@ namespace Database.Migrations
         {
             var currentTables = client.ListTablesAsync().Result;
             List<string> currentTableNames = currentTables.TableNames;
+
             if (currentTableNames.Contains(TABLE_NAME)) return;
             Console.WriteLine($"Applying {nameof(CreateOrdersTable_1)}");
 
@@ -45,12 +46,12 @@ namespace Database.Migrations
                     },
                     new AttributeDefinition
                     {
-                        AttributeName = "Status",
+                        AttributeName = "OrderStatus",
                         AttributeType = ScalarAttributeType.N
                     },
                     new AttributeDefinition
                     {
-                        AttributeName = "Type",
+                        AttributeName = "OrderType",
                         AttributeType = ScalarAttributeType.N
                     },
                     new AttributeDefinition
@@ -61,7 +62,12 @@ namespace Database.Migrations
                     new AttributeDefinition
                     {
                         AttributeName = "CreatedAt",
-                        AttributeType = ScalarAttributeType.S
+                        AttributeType = ScalarAttributeType.N
+                    },
+                    new AttributeDefinition
+                    {
+                        AttributeName = "CompletedAt",
+                        AttributeType = ScalarAttributeType.N
                     }
                 },
                 KeySchema = new List<KeySchemaElement>()
@@ -97,7 +103,7 @@ namespace Database.Migrations
                             partitionKey,
                             new KeySchemaElement
                             {
-                                AttributeName = "Status",
+                                AttributeName = "OrderStatus",
                                 KeyType = KeyType.RANGE
                             }
                         },
@@ -111,7 +117,7 @@ namespace Database.Migrations
                             partitionKey,
                             new KeySchemaElement
                             {
-                                AttributeName = "Type",
+                                AttributeName = "OrderType",
                                 KeyType = KeyType.RANGE
                             }
                         },
@@ -155,7 +161,7 @@ namespace Database.Migrations
                         {
                             new KeySchemaElement
                             {
-                                AttributeName = "Status",
+                                AttributeName = "OrderStatus",
                                 KeyType = KeyType.HASH
                             },
                             new KeySchemaElement

@@ -13,11 +13,11 @@ using Microsoft.AspNetCore.Http;
 using Acceptance.Utilities;
 using Business.Commands;
 using FluentAssertions.Execution;
+using Conditus.Trader.Domain.Entities;
 
 using static Acceptance.Utilities.TestConstants;
 using static Acceptance.Seeds.AssetSeeds;
 using static Acceptance.Seeds.PortfolioSeeds;
-using Conditus.Trader.Domain.Entities;
 
 namespace Acceptance.Tests.V1
 {
@@ -85,7 +85,7 @@ namespace Acceptance.Tests.V1
                 dbOrder.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, 60000);
                 dbOrder.ExpiresAt.Should().BeCloseTo(createOrderCommand.ExpiresAt, 1000);
                 dbOrder.AssetType.Should().Be(DKK_STOCK.Type);
-                dbOrder.Status.Should().Be(OrderStatus.Active);
+                dbOrder.OrderStatus.Should().Be(OrderStatus.Active);
             }
         }
 
@@ -158,7 +158,7 @@ namespace Acceptance.Tests.V1
                 dbOrder.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, 60000);
                 dbOrder.ExpiresAt.Should().BeCloseTo(createOrderCommand.ExpiresAt, 1000);
                 dbOrder.AssetType.Should().Be(DKK_STOCK.Type);
-                dbOrder.Status.Should().Be(OrderStatus.Active);
+                dbOrder.OrderStatus.Should().Be(OrderStatus.Active);
             }
         }
 

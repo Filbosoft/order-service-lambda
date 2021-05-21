@@ -69,7 +69,6 @@ namespace Acceptance.Tests.V1
         {
             //Given
             //Orders seeded
-            var dbOrders = await _dbContext.ScanAsync<OrderEntity>(new List<ScanCondition>()).GetRemainingAsync();
 
             //When
             var httpResponse = await _client.GetAsync(BASE_URL);
@@ -79,7 +78,7 @@ namespace Acceptance.Tests.V1
             var orders = await httpResponse.GetDeserializedResponseBodyAsync<IEnumerable<OrderOverview>>();
 
             orders.Should().NotBeNullOrEmpty()
-                .And.Contain(o => o.Id.Equals(TEN_YEAR_OLD_ORDER.Id))
+                .And.OnlyContain(o => o.CreatedAt >= DateTime.UtcNow.AddYears(-10))
                 .And.NotContain(o => o.Id.Equals(OLD_ORDER.Id));
         }
 
@@ -87,7 +86,7 @@ namespace Acceptance.Tests.V1
         public async void GetOrders_WithPortfolioId_ShouldReturnAllPortfolioOrders()
         {
             //Given
-            var query = $"portfolioId={TESTUSER_PORTFOLIO}";
+            var query = $"portfolioId={TESTUSER_PORTFOLIO.Id}";
             var uri = $"{BASE_URL}?{query}";
 
             //When

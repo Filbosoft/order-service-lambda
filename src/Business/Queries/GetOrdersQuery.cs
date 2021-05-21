@@ -40,8 +40,8 @@ namespace Business.Queries
             _mapper = mapper;
         }
 
-        private string KeyExpression { get; set; }
-        private List<string> FilterExpressions { get; set; } = new List<string>();
+        private List<string> KeyConditions { get; set; } = new List<string>();
+        private List<string> FilterConditions { get; set; } = new List<string>();
 
         public async Task<BusinessResponse<IEnumerable<OrderOverview>>> Handle(GetOrdersQuery request, CancellationToken cancellationToken)
         {
@@ -52,101 +52,121 @@ namespace Business.Queries
             {
                 TableName = "Orders",
                 Select = "ALL_ATTRIBUTES",
+                ScanIndexForward = true,
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
-                    {":v_created_from_date", new AttributeValue{ S = request.CreatedFromDate.ToString()}}
+                    {":v_created_from_date", new AttributeValue{ N = DynamoDBMapper.GetUnixTimeMSFromDateTime((DateTime) request.CreatedFromDate).ToString()}}
                 }
             };
 
             var index = GetOptimalOrderIndex(request);
-            var defaultExpression = $"{nameof(OrderEntity.CreatedAt)} >= :v_created_from_date";
-            if (index != null)
-            {
-                query.IndexName = index;
-                FilterExpressions.Add(defaultExpression);
-            } else KeyExpression = defaultExpression;
+            query.IndexName = index;
 
-            
+            if (request.CreatedToDate != null)
+            {
+                var createdToCondition = $"({nameof(OrderEntity.CreatedAt)} BETWEEN :v_created_from_date AND :v_created_to_date)";
+
+                if (index == null) 
+                    KeyConditions.Add(createdToCondition);
+                else FilterConditions.Add(createdToCondition);
+
+                query.ExpressionAttributeValues.Add(
+                    ":v_created_to_date",
+                    new AttributeValue { N = DynamoDBMapper.GetUnixTimeMSFromDateTime((DateTime)request.CreatedToDate).ToString() });
+            }
+            else 
+            {
+                var createdFromCondition = $"({nameof(OrderEntity.CreatedAt)} >= :v_created_from_date)";
+                if (index == null)
+                    KeyConditions.Add(createdFromCondition);
+                else FilterConditions.Add(createdFromCondition);
+            } 
 
             if (request.Type != null)
             {
-                KeyExpression = $"{nameof(OrderEntity.Type)} = :v_type";
-                if (!index.Equals(LocalIndexes.UserOrderTypeIndex)) FilterExpressions.Add(KeyExpression);
+                var typeCondition = $"{nameof(OrderEntity.OrderType)} = :v_type";
+
+                if (index.Equals(LocalIndexes.UserOrderTypeIndex))
+                    KeyConditions.Add(typeCondition);
+                else FilterConditions.Add(typeCondition);
 
                 query.ExpressionAttributeValues.Add(
                     ":v_type",
-                    new AttributeValue{N = ((int)request.Type).ToString()});
+                    new AttributeValue { N = ((int)request.Type).ToString() });
             }
 
             if (request.Status != null)
             {
-                KeyExpression = $"{nameof(OrderEntity.Status)} = :v_status";
-                if (!index.Equals(LocalIndexes.UserOrderStatusIndex)) FilterExpressions.Add(KeyExpression);
+                var statusCondition = $"{nameof(OrderEntity.OrderStatus)} = :v_status";
+
+                if (index.Equals(LocalIndexes.UserOrderStatusIndex))
+                    KeyConditions.Add(statusCondition);
+                else FilterConditions.Add(statusCondition);
 
                 query.ExpressionAttributeValues.Add(
                     ":v_status",
-                    new AttributeValue{N = ((int)request.Status).ToString()});
+                    new AttributeValue { N = ((int)request.Status).ToString() });
             }
 
             if (request.PortfolioId != null)
             {
-                KeyExpression = $"{nameof(OrderEntity.PortfolioId)} = :v_portfolio_id";
-                if (!index.Equals(LocalIndexes.UserOrderPortfolioIndex)) FilterExpressions.Add(KeyExpression);
+                var portfolioIdCondition = $"{nameof(OrderEntity.PortfolioId)} = :v_portfolio_id";
+
+                if (index.Equals(LocalIndexes.UserOrderPortfolioIndex))
+                    KeyConditions.Add(portfolioIdCondition);
+                else FilterConditions.Add(portfolioIdCondition);
 
                 query.ExpressionAttributeValues.Add(
                     ":v_portfolio_id",
-                    new AttributeValue{S = request.PortfolioId});
+                    new AttributeValue { S = request.PortfolioId });
             }
 
             if (request.AssetSymbol != null)
             {
-                KeyExpression = $"{nameof(OrderEntity.AssetSymbol)} = :v_asset_symbol";
-                if (!index.Equals(LocalIndexes.UserOrderAssetIndex)) FilterExpressions.Add(KeyExpression);
+                var assetSymbolCondition = $"{nameof(OrderEntity.AssetSymbol)} = :v_asset_symbol";
+
+                if (index.Equals(LocalIndexes.UserOrderAssetIndex))
+                    KeyConditions.Add(assetSymbolCondition);
+                else FilterConditions.Add(assetSymbolCondition);
 
                 query.ExpressionAttributeValues.Add(
                     ":v_asset_symbol",
-                    new AttributeValue{S = request.AssetSymbol});
+                    new AttributeValue { S = request.AssetSymbol });
             }
 
             if (request.AssetType != null)
             {
-                FilterExpressions.Add($"{nameof(OrderEntity.AssetType)} = :v_asset_type");
+                FilterConditions.Add($"{nameof(OrderEntity.AssetType)} = :v_asset_type");
                 query.ExpressionAttributeValues.Add(
                     ":v_asset_type",
-                    new AttributeValue{N = ((int)request.Status).ToString()});
-            }
-
-            if (request.CreatedToDate != null)
-            {
-                FilterExpressions.Add($"{nameof(OrderEntity.CreatedAt)} <= :v_created_to_date");
-                query.ExpressionAttributeValues.Add(
-                    ":v_created_to_date",
-                    new AttributeValue{S = request.CreatedToDate.ToString()});
+                    new AttributeValue { N = ((int)request.Status).ToString() });
             }
 
             if (request.CompletedFromDate != null)
             {
-                FilterExpressions.Add($"{nameof(OrderEntity.CompletedAt)} >= :v_completed_from_date");
+                FilterConditions.Add($"{nameof(OrderEntity.CompletedAt)} >= :v_completed_from_date");
                 query.ExpressionAttributeValues.Add(
                     ":v_completed_from_date",
-                    new AttributeValue{S = request.CompletedFromDate.ToString()});
+                    new AttributeValue { N = DynamoDBMapper.GetUnixTimeMSFromDateTime((DateTime)request.CompletedFromDate).ToString() });
             }
 
             if (request.CompletedToDate != null)
             {
-                FilterExpressions.Add($"{nameof(OrderEntity.CompletedAt)} <= :v_completed_to_date");
+                FilterConditions.Add($"{nameof(OrderEntity.CompletedAt)} <= :v_completed_to_date");
                 query.ExpressionAttributeValues.Add(
                     ":v_completed_to_date",
-                    new AttributeValue{S = request.CompletedToDate.ToString()});
+                    new AttributeValue { N = DynamoDBMapper.GetUnixTimeMSFromDateTime((DateTime)request.CompletedToDate).ToString() });
             }
 
-            query.KeyConditionExpression = $"{nameof(OrderEntity.CreatedBy)} = :v_requesting_user_id and {KeyExpression}";
+            KeyConditions.Add($"({nameof(OrderEntity.CreatedBy)} = :v_requesting_user_id)");
             query.ExpressionAttributeValues.Add(
                 ":v_requesting_user_id",
-                new AttributeValue{S = request.RequestingUserId});
+                new AttributeValue { S = request.RequestingUserId });
+
+            query.KeyConditionExpression = string.Join(" AND ", KeyConditions);
             
-            if (FilterExpressions.Count > 0)
-                query.FilterExpression = string.Join(" and ", FilterExpressions);
+            if (FilterConditions.Count > 0)
+                query.FilterExpression = string.Join(" AND ", FilterConditions);
 
             var response = await _db.QueryAsync(query);
             var orderItems = response.Items;
@@ -180,8 +200,13 @@ namespace Business.Queries
 
             if (request.Type != null)
                 return LocalIndexes.UserOrderTypeIndex;
-            
+
             return null;
+        }
+
+        public void SetCreatedFromSortKeyExpression(GetOrdersQuery request, QueryRequest query)
+        {
+            
         }
     }
 }
