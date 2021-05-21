@@ -241,13 +241,24 @@ namespace Acceptance.Tests.V1
         {
             get
             {
-                yield return new Object[] { new CreateOrderCommand { AssetSymbol = "Asset#1", Quantity = 10, Price = 150.5M, PortfolioId = "e8a3e754-b71c-4e56-afad-26a04dfbcc18", ExpiresAt = DateTime.UtcNow.AddMinutes(1)} };
-                yield return new Object[] { new CreateOrderCommand { Type = OrderType.Buy, Quantity = 10, Price = 150.5M, PortfolioId = "e8a3e754-b71c-4e56-afad-26a04dfbcc18", ExpiresAt = DateTime.UtcNow.AddMinutes(1)} };
-                yield return new Object[] { new CreateOrderCommand { Type = OrderType.Buy, AssetSymbol = "Asset#1", Price = 150.5M, PortfolioId = "e8a3e754-b71c-4e56-afad-26a04dfbcc18", ExpiresAt = DateTime.UtcNow.AddMinutes(1)} };
-                yield return new Object[] { new CreateOrderCommand { Type = OrderType.Buy, AssetSymbol = "Asset#1", Quantity = 10, PortfolioId = "e8a3e754-b71c-4e56-afad-26a04dfbcc18", ExpiresAt = DateTime.UtcNow.AddMinutes(1)} };
-                yield return new Object[] { new CreateOrderCommand { Type = OrderType.Buy, AssetSymbol = "Asset#1", Quantity = 10, Price = 150.5M, ExpiresAt = DateTime.UtcNow.AddMinutes(1)} };
+                yield return new Object[] { new CreateOrderCommand { AssetSymbol = "Asset#1", Quantity = 10, Price = 150.5M, PortfolioId = "e8a3e754-b71c-4e56-afad-26a04dfbcc18", ExpiresAt = DateTime.UtcNow.AddMinutes(1) } };
+                yield return new Object[] { new CreateOrderCommand { Type = OrderType.Buy, Quantity = 10, Price = 150.5M, PortfolioId = "e8a3e754-b71c-4e56-afad-26a04dfbcc18", ExpiresAt = DateTime.UtcNow.AddMinutes(1) } };
+                yield return new Object[] { new CreateOrderCommand { Type = OrderType.Buy, AssetSymbol = "Asset#1", Price = 150.5M, PortfolioId = "e8a3e754-b71c-4e56-afad-26a04dfbcc18", ExpiresAt = DateTime.UtcNow.AddMinutes(1) } };
+                yield return new Object[] { new CreateOrderCommand { Type = OrderType.Buy, AssetSymbol = "Asset#1", Quantity = 10, PortfolioId = "e8a3e754-b71c-4e56-afad-26a04dfbcc18", ExpiresAt = DateTime.UtcNow.AddMinutes(1) } };
+                yield return new Object[] { new CreateOrderCommand { Type = OrderType.Buy, AssetSymbol = "Asset#1", Quantity = 10, Price = 150.5M, ExpiresAt = DateTime.UtcNow.AddMinutes(1) } };
                 yield return new Object[] { new CreateOrderCommand { Type = OrderType.Buy, AssetSymbol = "Asset#1", Quantity = 10, Price = 150.5M, PortfolioId = "e8a3e754-b71c-4e56-afad-26a04dfbcc18" } };
             }
+        }
+
+        [Fact]
+        public void TestDefaultExpiresAtIsSet()
+        {
+            throw new NotImplementedException();
+            //Given
+
+            //When
+
+            //Then
         }
     }
 }

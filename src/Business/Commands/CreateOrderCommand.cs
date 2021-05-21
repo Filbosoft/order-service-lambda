@@ -72,6 +72,8 @@ namespace Business.Commands
             var entity = _mapper.Map<OrderEntity>(request);
             entity.Id = Guid.NewGuid().ToString();
             entity.AssetName = asset.Name;
+            if (request.ExpiresAt == null)
+                entity.ExpiresAt = DateTime.UtcNow.AddDays(1);
 
             await _dbContext.SaveAsync(entity);
 
