@@ -2,10 +2,10 @@ namespace Database
 {
     public static class LocalIndexes
     {
-        public const string OrderIdIndex = "OrderIdIndex";
-        public const string OrderStatusIndex = "OrderStatusIndex";
-        public const string OrderTypeIndex = "OrderTypeIndex";
-        public const string OrderPortfolioIndex = "PortfolioOrderIndex";
-        public const string OrderAssetIndex = "OrderAssetIndex";
+        public const string UserOrderIdIndex = "UserOrderIdIndex";
+        public const string UserOrderStatusIndex = "UserOrderStatusIndex";
+        public const string UserOrderTypeIndex = "UserOrderTypeIndex";
+        public const string UserOrderPortfolioIndex = "UserPortfolioOrderIndex";
+        public const string UserOrderAssetIndex = "UserOrderAssetIndex";
     }
 }

@@ -77,7 +77,7 @@ namespace Database.Migrations
                 {
                     new LocalSecondaryIndex
                     {
-                        IndexName = LocalIndexes.OrderIdIndex,
+                        IndexName = LocalIndexes.UserOrderIdIndex,
                         KeySchema = new List<KeySchemaElement>
                         {
                             partitionKey,
@@ -91,7 +91,7 @@ namespace Database.Migrations
                     },
                     new LocalSecondaryIndex
                     {
-                        IndexName = LocalIndexes.OrderStatusIndex,
+                        IndexName = LocalIndexes.UserOrderStatusIndex,
                         KeySchema = new List<KeySchemaElement>
                         {
                             partitionKey,
@@ -105,7 +105,7 @@ namespace Database.Migrations
                     },
                     new LocalSecondaryIndex
                     {
-                        IndexName = LocalIndexes.OrderTypeIndex,
+                        IndexName = LocalIndexes.UserOrderTypeIndex,
                         KeySchema = new List<KeySchemaElement>
                         {
                             partitionKey,
@@ -119,7 +119,7 @@ namespace Database.Migrations
                     },
                     new LocalSecondaryIndex
                     {
-                        IndexName = LocalIndexes.OrderAssetIndex,
+                        IndexName = LocalIndexes.UserOrderAssetIndex,
                         KeySchema = new List<KeySchemaElement>
                         {
                             partitionKey,
@@ -133,7 +133,7 @@ namespace Database.Migrations
                     },
                     new LocalSecondaryIndex
                     {
-                        IndexName = LocalIndexes.OrderPortfolioIndex,
+                        IndexName = LocalIndexes.UserOrderPortfolioIndex,
                         KeySchema = new List<KeySchemaElement>
                         {
                             partitionKey,
@@ -142,6 +142,32 @@ namespace Database.Migrations
                                 AttributeName = "PortfolioId",
                                 KeyType = KeyType.RANGE
                             }
+                        },
+                        Projection = new Projection{ProjectionType = ProjectionType.ALL}
+                    }
+                },
+                GlobalSecondaryIndexes = new List<GlobalSecondaryIndex>
+                {
+                    new GlobalSecondaryIndex
+                    {
+                        IndexName = GlobalIndexes.OrderStatusIndex,
+                        KeySchema = new List<KeySchemaElement>
+                        {
+                            new KeySchemaElement
+                            {
+                                AttributeName = "Status",
+                                KeyType = KeyType.HASH
+                            },
+                            new KeySchemaElement
+                            {
+                                AttributeName = "CreatedAt",
+                                KeyType = KeyType.RANGE
+                            }
+                        },
+                        ProvisionedThroughput = new ProvisionedThroughput
+                        {
+                            ReadCapacityUnits = 10,
+                            WriteCapacityUnits = 2
                         },
                         Projection = new Projection{ProjectionType = ProjectionType.ALL}
                     }
