@@ -39,7 +39,6 @@ namespace API.Controllers
             );
         }
 
-        // Get orders
         [HttpGet]
         public async Task<IActionResult> GetOrders(
             [FromQuery] string portfolioId,
@@ -86,7 +85,5 @@ namespace API.Controllers
             var order = response.Data;
             return Ok(order);
         }
-
-        // Update order
     }
 }
