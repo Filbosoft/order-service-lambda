@@ -81,7 +81,7 @@ namespace Acceptance.Tests.V1
                         .Excluding(o => o.ExpiresAt));
 
                 dbOrder.Id.Should().NotBeNullOrEmpty();
-                dbOrder.CreatedBy.Should().Be(TESTUSER_ID);
+                dbOrder.OwnerId.Should().Be(TESTUSER_ID);
                 dbOrder.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, 60000);
                 dbOrder.ExpiresAt.Should().BeCloseTo((DateTime)createOrderCommand.ExpiresAt, 1000);
                 dbOrder.AssetType.Should().Be(DKK_STOCK.Type);
@@ -154,7 +154,7 @@ namespace Acceptance.Tests.V1
                         .Excluding(o => o.ExpiresAt));
 
                 dbOrder.Id.Should().NotBeNullOrEmpty();
-                dbOrder.CreatedBy.Should().Be(TESTUSER_ID);
+                dbOrder.OwnerId.Should().Be(TESTUSER_ID);
                 dbOrder.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, 60000);
                 dbOrder.ExpiresAt.Should().BeCloseTo((DateTime)createOrderCommand.ExpiresAt, 1000);
                 dbOrder.AssetType.Should().Be(DKK_STOCK.Type);

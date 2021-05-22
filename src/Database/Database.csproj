@@ -9,8 +9,4 @@
     <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.0.22" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Conditus.Trader.Domain\Conditus.Trader.Domain.csproj" />
-  </ItemGroup>
-
 </Project>

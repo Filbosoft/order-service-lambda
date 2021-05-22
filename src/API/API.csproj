@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Conditus.Trader.Domain" Version="1.0.1" />
+    <PackageReference Include="Conditus.Trader.Domain" Version="1.0.2" />
   </ItemGroup>
   
   <ItemGroup>

@@ -11,7 +11,7 @@ namespace Business.MappingProfiles
         {
             CreateMap<CreateOrderCommand, OrderEntity>()
                 .ForMember(
-                    entity => entity.CreatedBy,
+                    entity => entity.OwnerId,
                     opt => opt.MapFrom(command => command.RequestingUserId)
                 )
                 .ForMember(

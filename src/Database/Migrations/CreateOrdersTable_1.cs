@@ -20,7 +20,7 @@ namespace Database.Migrations
 
             var partitionKey = new KeySchemaElement
             {
-                AttributeName = "CreatedBy",
+                AttributeName = "OwnerId",
                 KeyType = KeyType.HASH //Partition key
             };
 
@@ -36,7 +36,7 @@ namespace Database.Migrations
                     },
                     new AttributeDefinition
                     {
-                        AttributeName = "CreatedBy",
+                        AttributeName = "OwnerId",
                         AttributeType = ScalarAttributeType.S
                     },
                     new AttributeDefinition

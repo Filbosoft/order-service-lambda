@@ -212,7 +212,7 @@ namespace Business.Queries
                     ((DateTime)request.CompletedToDate).GetAttributeValue());
             }
 
-            KeyConditions.Add($"({nameof(OrderEntity.CreatedBy)} = {V_REQUESTING_USER_ID})");
+            KeyConditions.Add($"({nameof(OrderEntity.OwnerId)} = {V_REQUESTING_USER_ID})");
             query.ExpressionAttributeValues.Add(
                 V_REQUESTING_USER_ID,
                 new AttributeValue { S = request.RequestingUserId });

@@ -45,7 +45,7 @@ namespace Business.Queries
                 TableName = "Orders", // TODO: Figure out if the system should have a db table constants class in the Database project
                 Select = "ALL_ATTRIBUTES",
                 IndexName = LocalIndexes.UserOrderIdIndex,
-                KeyConditionExpression = $"{nameof(OrderEntity.CreatedBy)} = {V_REQUESTING_USER_ID} AND {nameof(OrderEntity.Id)} = {V_ORDER_ID}",
+                KeyConditionExpression = $"{nameof(OrderEntity.OwnerId)} = {V_REQUESTING_USER_ID} AND {nameof(OrderEntity.Id)} = {V_ORDER_ID}",
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
                     {V_REQUESTING_USER_ID, new AttributeValue{S = request.RequestingUserId}},
