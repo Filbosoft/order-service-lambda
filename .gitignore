@@ -3,3 +3,4 @@ obj
 
 # Dev / local files
 .vscode
+nuget.config

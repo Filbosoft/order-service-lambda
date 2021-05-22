@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\Conditus.Trader.Domain\Conditus.Trader.Domain.csproj" />
     <ProjectReference Include="..\Database\Database.csproj" />
   </ItemGroup>
 
@@ -11,6 +10,10 @@
     <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.0.24" />
     <PackageReference Include="MediatR" Version="9.0.0" />
     <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Conditus.Trader.Domain" Version="1.0.1" />
   </ItemGroup>
 
   <PropertyGroup>
