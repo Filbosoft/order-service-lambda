@@ -9,7 +9,7 @@
   "region": "",
   "configuration": "Release",
   "framework": "netcoreapp3.1",
-  "s3-prefix": "order-service-lambda/",
+  "s3-prefix": "order-service/",
   "template": "serverless.template",
   "template-parameters": ""
 }

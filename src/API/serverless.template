@@ -8,14 +8,14 @@
     "AspNetCoreFunction": {
       "Type": "AWS::Serverless::Function",
       "Properties": {
-        "Handler": "order-service-lambda::order_service_lambda.LambdaEntryPoint::FunctionHandlerAsync",
+        "Handler": "API::API.LambdaEntryPoint::FunctionHandlerAsync",
         "Runtime": "dotnetcore3.1",
         "CodeUri": "",
         "MemorySize": 256,
         "Timeout": 30,
         "Role": null,
         "Policies": [
-          "AWSLambda_FullAccess"
+          "arn:aws:iam::494299113511:policy/ConditusTrader_OrderService"
         ],
         "Events": {
           "ProxyResource": {
