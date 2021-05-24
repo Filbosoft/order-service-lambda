@@ -12,6 +12,7 @@ using Conditus.Trader.Domain.Entities;
 using Amazon.DynamoDBv2;
 using Conditus.Trader.Domain;
 using Database.Indexes;
+using Conditus.DynamoDBMapper.Mappers;
 
 namespace Business.Queries
 {
@@ -48,7 +49,7 @@ namespace Business.Queries
             var query = GetQueryRequest(request);
             var response = await _db.QueryAsync(query);
             var orderEntities = response.Items
-                .Select(DynamoDBMapper.MapAttributeMapToEntity<OrderEntity>)
+                .Select(i => i.GetEntity<OrderEntity>())
                 .ToList();
 
             var orderOverviews = orderEntities.Select(_mapper.Map<OrderOverview>);
