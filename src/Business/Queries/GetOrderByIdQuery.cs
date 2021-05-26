@@ -14,6 +14,7 @@ using Conditus.Trader.Domain;
 using Database.Indexes;
 using System.ComponentModel.DataAnnotations;
 using Conditus.DynamoDBMapper.Mappers;
+using Business.HelperMethods;
 
 namespace Business.Queries
 {
@@ -43,7 +44,7 @@ namespace Business.Queries
         {
             var query = new QueryRequest
             {
-                TableName = "Orders", // TODO: Figure out if the system should have a db table constants class in the Database project
+                TableName = DynamoDBHelper.GetDynamoDBTableName<OrderEntity>(),
                 Select = "ALL_ATTRIBUTES",
                 IndexName = LocalIndexes.UserOrderIdIndex,
                 KeyConditionExpression = $"{nameof(OrderEntity.OwnerId)} = {V_REQUESTING_USER_ID} AND {nameof(OrderEntity.Id)} = {V_ORDER_ID}",
@@ -56,7 +57,7 @@ namespace Business.Queries
 
             var response = await _db.QueryAsync(query);
             var orderEntity = response.Items
-                .Select(i => i.GetEntity<OrderEntity>())
+                .Select(i => i.ToEntity<OrderEntity>())
                 .FirstOrDefault();
             
             if (orderEntity == null)

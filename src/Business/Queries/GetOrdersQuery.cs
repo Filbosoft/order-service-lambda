@@ -13,6 +13,7 @@ using Amazon.DynamoDBv2;
 using Conditus.Trader.Domain;
 using Database.Indexes;
 using Conditus.DynamoDBMapper.Mappers;
+using Business.HelperMethods;
 
 namespace Business.Queries
 {
@@ -49,7 +50,7 @@ namespace Business.Queries
             var query = GetQueryRequest(request);
             var response = await _db.QueryAsync(query);
             var orderEntities = response.Items
-                .Select(i => i.GetEntity<OrderEntity>())
+                .Select(i => i.ToEntity<OrderEntity>())
                 .ToList();
 
             var orderOverviews = orderEntities.Select(_mapper.Map<OrderOverview>);
@@ -81,7 +82,7 @@ namespace Business.Queries
         {
             var query = new QueryRequest
             {
-                TableName = "Orders", // TODO: Figure out if the system should have a db table constants class in the Database project
+                TableName = DynamoDBHelper.GetDynamoDBTableName<OrderEntity>(),
                 Select = "ALL_ATTRIBUTES",
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
