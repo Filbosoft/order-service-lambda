@@ -16,7 +16,7 @@ To setup local DynamoDB databases for testing and development run:
     - `dotnet run -p src/Database/ up --local`
     - `dotnet run -p src/Database/ up --local http://localhost:9000`
 
-#### Local Nuget feed
+#### Local NuGet feed / Conditus packages
 Create a 'nuget.config' file with a source pointing to your local nuget feed.
 Ex:
 ```
@@ -29,10 +29,10 @@ Ex:
 </configuration>
 ```
 
-To get the nuget packages into the local feed:
+To get the Conditus packages into the local feed:
 1. Pull the repo of the nuget package you want
 2. Run `dotnet pack`
-3. Run `dotnet nuget add -s {Path/To/Local/Feed} {Path/To/NugetPackage (found in bin/Debug)}`
+3. Run `dotnet nuget push -s {Path/To/Local/Feed} {Path/To/NuGetPackage (found in bin/Debug)}`
 
 ## Generate user tokens
 `aws cognito-idp initiate-auth --auth-flow USER_PASSWORD_AUTH --client-id {clientId}  --auth-parameters USERNAME={username},PASSWORD="{password}"`
@@ -41,6 +41,6 @@ aws cognito-idp initiate-auth --auth-flow USER_PASSWORD_AUTH --client-id 7omub5a
 - https://stackoverflow.com/questions/49063292/how-to-generate-access-token-for-an-aws-cognito-user 
 
 ## Deploying
-`dotnet lambda deploy-serverless conditus-trader-order-service --s3-bucket conditus-trader -t src/API/serverless.template --s3-prefix order-service`
+`dotnet lambda deploy-serverless conditus-trader-order-service --s3-bucket conditus-trader -t src/Api/serverless.template --s3-prefix order-service`
 
-- https://docs.aws.amazon.com/toolkit-for-visual-studio/latest/user-guide/lambda-cli-publish.html 
+- https://docs.aws.amazon.com/toolkit-for-visual-studio/latest/user-guide/lambda-cli-publish.html
