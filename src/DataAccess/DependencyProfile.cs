@@ -48,7 +48,8 @@ namespace DataAccess
 
             services
                 .Configure<PortfolioServiceOptions>(servicesSection.GetSection("PortfolioService"))
-                .Configure<AssetServiceOptions>(servicesSection.GetSection("AssetService"));
+                .Configure<AssetServiceOptions>(servicesSection.GetSection("AssetService"))
+                .Configure<CurrencyServiceOptions>(servicesSection.GetSection("CurrencyService"));
 
             return services;
         }
@@ -57,7 +58,8 @@ namespace DataAccess
         {
             services
                 .AddScoped<IPortfolioRepository, PortfolioRepository>()
-                .AddScoped<IAssetRepository, AssetRepository>();
+                .AddScoped<IAssetRepository, AssetRepository>()
+                .AddScoped<ICurrencyRepository, CurrencyRepository>();
 
             return services;
         }

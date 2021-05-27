@@ -25,21 +25,26 @@ namespace Business.Validation.Requests
     public class ValidateBuyOrderRequestHandler : IValidationHandler<ValidateBuyOrderRequest>
     {
         private readonly IMapper _mapper;
-        // private readonly ICurrencyRepository _currencyRepository;
+        private readonly ICurrencyRepository _currencyRepository;
 
-        public ValidateBuyOrderRequestHandler(IMapper mapper)
+        public ValidateBuyOrderRequestHandler(IMapper mapper, ICurrencyRepository currencyRepository)
         {
             _mapper = mapper;
-            // _currencyRepository = currencyRepository;
+            _currencyRepository = currencyRepository;
         }
+
+        private const string DEFAULT_PORTFOLIO_CURRENCY_SYMBOL = "DKK";
 
         public async Task<ValidationResult> Handle(ValidateBuyOrderRequest request, CancellationToken cancellationToken)
         {
             decimal orderCost;
-            if (request.Asset.Currency.Code.Equals("DKK"))
+            if (request.Asset.Currency.Code.Equals(DEFAULT_PORTFOLIO_CURRENCY_SYMBOL))
                 orderCost = request.Price * request.Quantity;
             else
-                orderCost =  request.Price * request.Quantity;//await _currencyRepository.ConvertCurrency(request.Asset.Currency.Code, "DKK", request.Quantity);
+                orderCost =  await _currencyRepository.ConvertCurrency(
+                    request.Asset.Currency.Code,
+                    DEFAULT_PORTFOLIO_CURRENCY_SYMBOL,
+                    request.Quantity);
             
             var remainingCapital = request.Portfolio.Capital - orderCost;
 
