@@ -1,6 +1,9 @@
 ﻿using System.Reflection;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
+using Business.Repositories;
+using DataAccess.Options;
+using DataAccess.Repositories;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -12,6 +15,7 @@ namespace DataAccess
         {
             services
                 .AddDynamoDB(config)
+                .AddDataAccessOptions(config)
                 .AddRepositories();
 
             return services;
@@ -30,7 +34,7 @@ namespace DataAccess
                     return new AmazonDynamoDBClient(clientConfig);
                 });
             }
-            else 
+            else
                 services.AddAWSService<IAmazonDynamoDB>();
 
             services.AddScoped<IDynamoDBContext, DynamoDBContext>();
@@ -38,8 +42,20 @@ namespace DataAccess
             return services;
         }
 
+        private static IServiceCollection AddDataAccessOptions(this IServiceCollection services, IConfiguration config)
+        {
+            var servicesSection = config.GetSection("Services");
+
+            services
+                .Configure<PortfolioServiceOptions>(servicesSection.GetSection("PortfolioService"));
+
+            return services;
+        }
+
         private static IServiceCollection AddRepositories(this IServiceCollection services)
         {
+            services
+                .AddScoped<IPortfolioRepository, PortfolioRepository>();
 
             return services;
         }

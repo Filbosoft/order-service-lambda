@@ -15,6 +15,7 @@ using Amazon.Runtime;
 using Integration.Utilities;
 using Business;
 using Integration.Fakes.V1;
+using Business.Repositories;
 
 namespace Integration
 {

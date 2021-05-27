@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Business;
+using Business.Repositories;
 using Conditus.Trader.Domain.Models;
 
 using static Integration.Seeds.V1.CurrencySeeds;
@@ -17,7 +17,7 @@ namespace Integration.Fakes.V1
 
         public async Task<decimal> ConvertCurrency(string fromSymbol, string toSymbol, decimal amount)
         {
-            return amount * COVERSION_RATE;
+            return await Task.FromResult(amount * COVERSION_RATE);
         }
     }
 }

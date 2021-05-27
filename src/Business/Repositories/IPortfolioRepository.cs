@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using Conditus.Trader.Domain.Models;
 
-namespace Business
+namespace Business.Repositories
 {
     public interface IPortfolioRepository
     {
