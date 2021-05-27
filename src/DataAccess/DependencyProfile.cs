@@ -47,7 +47,8 @@ namespace DataAccess
             var servicesSection = config.GetSection("Services");
 
             services
-                .Configure<PortfolioServiceOptions>(servicesSection.GetSection("PortfolioService"));
+                .Configure<PortfolioServiceOptions>(servicesSection.GetSection("PortfolioService"))
+                .Configure<AssetServiceOptions>(servicesSection.GetSection("AssetService"));
 
             return services;
         }
@@ -55,7 +56,8 @@ namespace DataAccess
         private static IServiceCollection AddRepositories(this IServiceCollection services)
         {
             services
-                .AddScoped<IPortfolioRepository, PortfolioRepository>();
+                .AddScoped<IPortfolioRepository, PortfolioRepository>()
+                .AddScoped<IAssetRepository, AssetRepository>();
 
             return services;
         }

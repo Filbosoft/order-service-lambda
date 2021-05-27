@@ -6,6 +6,7 @@ using Amazon.DynamoDBv2.DataModel;
 using AutoMapper;
 using Business.Repositories;
 using Business.Validation.Attributes;
+using Business.Validation.Requests;
 using Business.Wrappers;
 using Conditus.Trader.Domain.Entities;
 using Conditus.Trader.Domain.Enums;
@@ -34,20 +35,20 @@ namespace Business.Commands
     {
         private readonly IMediator _mediator;
         private readonly IMapper _mapper;
-        // private readonly IAssetRepository _assetRepository;
+        private readonly IAssetRepository _assetRepository;
         private readonly IPortfolioRepository _portfolioRepository;
         private readonly IDynamoDBContext _dbContext;
 
         public CreateOrderCommandHandler(
             IMediator mediator,
             IMapper mapper,
-            // IAssetRepository assetRepository,
+            IAssetRepository assetRepository,
             IPortfolioRepository portfolioRepository,
             IDynamoDBContext dbContext)
         {
             _mediator = mediator;
             _mapper = mapper;
-            // _assetRepository = assetRepository;
+            _assetRepository = assetRepository;
             _portfolioRepository = portfolioRepository;
             _dbContext = dbContext;
         }
@@ -58,19 +59,19 @@ namespace Business.Commands
             if (portfolio == null)
                 return BusinessResponse.Fail<OrderDetail>("Error occurred trying to get portfolio");
 
-            // var asset = await _assetRepository.GetAssetBySymbol(request.AssetSymbol);
-            // if (asset == null)
-            //     return BusinessResponse.Fail<OrderDetail>("Error occurred trying to get asset");
+            var asset = await _assetRepository.GetAssetBySymbol(request.AssetSymbol);
+            if (asset == null)
+                return BusinessResponse.Fail<OrderDetail>("Error occurred trying to get asset");
 
-            // IValidationRequest validationRequest = GetValidationRequest(request, portfolio, asset);
-            // var validationResult = await _mediator.Send(validationRequest);
+            IValidationRequest validationRequest = GetValidationRequest(request, portfolio, asset);
+            var validationResult = await _mediator.Send(validationRequest);
 
-            // if (validationResult != ValidationResult.Success)
-            //     return BusinessResponse.Fail<OrderDetail>(validationResult.ErrorMessage);
+            if (validationResult != ValidationResult.Success)
+                return BusinessResponse.Fail<OrderDetail>(validationResult.ErrorMessage);
 
             var entity = _mapper.Map<OrderEntity>(request);
             entity.Id = Guid.NewGuid().ToString();
-            // entity.AssetName = asset.Name;
+            entity.AssetName = asset.Name;
             if (request.ExpiresAt == null)
                 entity.ExpiresAt = DateTime.UtcNow.AddDays(1);
 
@@ -80,28 +81,28 @@ namespace Business.Commands
             return BusinessResponse.Ok<OrderDetail>(orderDetail, "Order created!");
         }
 
-        // public IValidationRequest GetValidationRequest(CreateOrderCommand request, PortfolioDetail portfolio, AssetDetail asset)
-        // {
-        //     switch (request.Type)
-        //     {
-        //         case OrderType.Buy:
-        //             return new ValidateBuyOrderRequest
-        //             {
-        //                 Portfolio = portfolio,
-        //                 Asset = asset,
-        //                 Price = request.Price,
-        //                 Quantity = request.Quantity
-        //             };
-        //         case OrderType.Sell:
-        //             return new ValidateSellOrderRequest
-        //             {
-        //                 Portfolio = portfolio,
-        //                 Asset = asset,
-        //                 Quantity = request.Quantity
-        //             };
-        //         default:
-        //             return null;
-        //     }
-        // }
+        public IValidationRequest GetValidationRequest(CreateOrderCommand request, PortfolioDetail portfolio, AssetDetail asset)
+        {
+            switch (request.Type)
+            {
+                case OrderType.Buy:
+                    return new ValidateBuyOrderRequest
+                    {
+                        Portfolio = portfolio,
+                        Asset = asset,
+                        Price = request.Price,
+                        Quantity = request.Quantity
+                    };
+                case OrderType.Sell:
+                    return new ValidateSellOrderRequest
+                    {
+                        Portfolio = portfolio,
+                        Asset = asset,
+                        Quantity = request.Quantity
+                    };
+                default:
+                    return null;
+            }
+        }
     }
 }

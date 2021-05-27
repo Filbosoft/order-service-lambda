@@ -18,6 +18,7 @@ using Conditus.Trader.Domain.Entities;
 using static Integration.Tests.V1.TestConstants;
 using static Integration.Seeds.V1.AssetSeeds;
 using static Integration.Seeds.V1.PortfolioSeeds;
+using System.Net;
 
 namespace Integration.Tests.V1
 {
@@ -108,7 +109,7 @@ namespace Integration.Tests.V1
             var httpResponse = await _client.PostAsync(BASE_URL, HttpSerializer.GetStringContent(createOrderCommand));
 
             //Then
-            httpResponse.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            httpResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
 
         [Fact]
