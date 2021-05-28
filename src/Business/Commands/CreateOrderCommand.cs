@@ -26,6 +26,7 @@ namespace Business.Commands
         [Range(1, int.MaxValue)]
         public int Quantity { get; set; }
         [Required]
+        [Range(1, double.MaxValue)]
         public decimal Price { get; set; }
         [DateTimeLaterThanUTCNowValidationAttribute]
         public DateTime? ExpiresAt { get; set; }

@@ -18,7 +18,7 @@ namespace Business.HelperMethods
             return dynamoDBTableAttribute.TableName;
         }
 
-        private static string GetHashKeyName<T>()
+        public static string GetHashKeyName<T>()
         {
             var type = typeof(T);
             var hashProperty = type.GetProperties()

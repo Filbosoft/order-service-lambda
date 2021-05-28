@@ -9,7 +9,6 @@ using Amazon.DynamoDBv2.DataModel;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Integration.Utilities;
-
 using Conditus.Trader.Domain.Entities;
 
 using static Integration.Tests.V1.TestConstants;

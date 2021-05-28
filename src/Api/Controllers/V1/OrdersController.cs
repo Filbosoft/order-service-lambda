@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Business.Commands;
 using Business.Queries;
 using Conditus.Trader.Domain.Enums;
+using Conditus.Trader.Domain.Models;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -84,6 +85,20 @@ namespace Api.Controllers
 
             var order = response.Data;
             return Ok(order);
+        }
+
+        [HttpPut]
+        [Route("{id}")]
+        public async Task<ActionResult<OrderDetail>> UpdateOrder([FromRoute] string id, UpdateOrderCommand command)
+        {
+            command.Id = id;
+            var response = await _mediator.Send(command);
+
+            if (response.IsError)
+                return BadRequest(response.Message);
+            
+            var updatedOrder = response.Data;
+            return Accepted(updatedOrder);
         }
     }
 }

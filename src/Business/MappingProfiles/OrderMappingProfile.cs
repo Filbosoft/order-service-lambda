@@ -1,5 +1,6 @@
 using AutoMapper;
 using Business.Commands;
+using Business.Validation.Requests;
 using Conditus.Trader.Domain.Entities;
 using Conditus.Trader.Domain.Models;
 
@@ -40,6 +41,8 @@ namespace Business.MappingProfiles
                     dest => dest.Type,
                     opt => opt.MapFrom(entity => entity.OrderType)
                 );
+
+            CreateMap<UpdateOrderCommand, ValidateUpdateOrderRequest>();
         }
     }
 }

@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-
 using Xunit;
-
 using Api;
 using System.Net.Http;
 using Conditus.Trader.Domain.Models;
@@ -10,7 +8,6 @@ using Amazon.DynamoDBv2.DataModel;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Integration.Utilities;
-
 using Conditus.Trader.Domain.Entities;
 
 using static Integration.Tests.V1.TestConstants;
@@ -66,10 +63,10 @@ namespace Integration.Tests.V1
             var order = await httpResponse.GetDeserializedResponseBodyAsync<OrderDetail>();
 
             order.Should().NotBeNull()
-                .And.BeEquivalentTo(ACTIVE_BUY_ORDER, o => 
+                .And.BeEquivalentTo(ACTIVE_BUY_ORDER, o =>
                     o.ExcludingMissingMembers());
         }
-        
+
         [Fact]
         public async void GetOrderById_WithInvalidId_ShouldReturnNotFound()
         {

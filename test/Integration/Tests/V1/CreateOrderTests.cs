@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-
+using System.Net;
 using Xunit;
-
 using Api;
 using System.Net.Http;
 using Conditus.Trader.Domain.Models;
@@ -18,7 +17,6 @@ using Conditus.Trader.Domain.Entities;
 using static Integration.Tests.V1.TestConstants;
 using static Integration.Seeds.V1.AssetSeeds;
 using static Integration.Seeds.V1.PortfolioSeeds;
-using System.Net;
 
 namespace Integration.Tests.V1
 {

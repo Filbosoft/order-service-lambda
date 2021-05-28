@@ -9,10 +9,11 @@ using static Integration.Seeds.V1.AssetSeeds;
 namespace Integration.Seeds.V1
 {
     public static class OrderSeeds
-    {        
+    {
+        public const string COMPLETED_BUY_ORDER_ID = "e365a51c-b176-494f-8506-1c80cb84a69b";
         public static readonly OrderEntity COMPLETED_BUY_ORDER = new OrderEntity
         {
-            Id = "e365a51c-b176-494f-8506-1c80cb84a69b",
+            Id = COMPLETED_BUY_ORDER_ID,
             OwnerId = TESTUSER_ID,
             PortfolioId = TESTUSER_PORTFOLIO.Id,
             AssetSymbol = DKK_STOCK.Symbol,
@@ -112,6 +113,21 @@ namespace Integration.Seeds.V1
             CompletedAt = Convert.ToDateTime("3/5/2021 08:00:00 AM").ToUniversalTime()
         };
 
+        public static readonly OrderEntity ACTIVE_NONUSER_ORDER = new OrderEntity
+        {
+            Id = "5f72672e-0388-4628-aadc-7d6fe90019de",
+            OwnerId = "2a75d2bb-4f2b-4d8e-8167-a74c10f9b08d",
+            PortfolioId = NONTESTUSER_PORTFOLIO.Id,
+            AssetSymbol = DKK_STOCK.Symbol,
+            AssetType = DKK_STOCK.Type,
+            OrderType = OrderType.Buy,
+            OrderStatus = OrderStatus.Active,
+            Price = 100M,
+            Quantity = 10,
+            CreatedAt = Convert.ToDateTime("5/28/2021 08:00:07 AM").ToUniversalTime(),
+            CompletedAt = Convert.ToDateTime("6/5/2021 08:00:00 AM").ToUniversalTime()
+        };
+
         public static readonly OrderEntity COMPLETED_ORDER_FROM_ANOTHER_PORTFOLIO = new OrderEntity
         {
             Id = "623d62a5-e1cd-4444-bec0-514ed95fa6bc",
@@ -123,7 +139,7 @@ namespace Integration.Seeds.V1
             OrderStatus = OrderStatus.Completed,
             Price = 100M,
             Quantity = 10,
-            CreatedAt = Convert.ToDateTime("2/5/2021 08:00:07 AM").ToUniversalTime(),
+            CreatedAt = Convert.ToDateTime("2/5/2021 08:00:08 AM").ToUniversalTime(),
             CompletedAt = Convert.ToDateTime("3/5/2021 08:00:00 AM").ToUniversalTime()
         };
 
@@ -138,7 +154,7 @@ namespace Integration.Seeds.V1
             OrderStatus = OrderStatus.Completed,
             Price = 100M,
             Quantity = 10,
-            CreatedAt = Convert.ToDateTime("2/5/2021 08:00:08 AM").ToUniversalTime(),
+            CreatedAt = Convert.ToDateTime("2/5/2021 08:00:09 AM").ToUniversalTime(),
             CompletedAt = Convert.ToDateTime("3/5/2021 08:00:00 AM").ToUniversalTime()
         };
 
@@ -155,6 +171,38 @@ namespace Integration.Seeds.V1
             Quantity = 10,
             CreatedAt = DateTime.UtcNow.AddMinutes(-10),
             CompletedAt = DateTime.UtcNow.AddMinutes(-1)
+        };
+
+        public const string EXPIRES_BUY_ORDER_ID = "479cac8a-5ec0-44e1-b31f-21189be9c78c";
+        public static readonly OrderEntity EXPIRED_BUY_ORDER = new OrderEntity
+        {
+            Id = EXPIRES_BUY_ORDER_ID,
+            OwnerId = TESTUSER_ID,
+            PortfolioId = TESTUSER_PORTFOLIO.Id,
+            AssetSymbol = DKK_STOCK.Symbol,
+            AssetType = DKK_STOCK.Type,
+            OrderType = OrderType.Buy,
+            OrderStatus = OrderStatus.Expired,
+            Price = 100M,
+            Quantity = 10,
+            CreatedAt = Convert.ToDateTime("2/5/2021 08:00:10 AM").ToUniversalTime(),
+            ExpiresAt = Convert.ToDateTime("2/6/2021 08:00:00 AM").ToUniversalTime()
+        };
+
+        public const string CANCELLED_BUY_ORDER_ID = "f530f947-4814-41e9-9526-c97f48ff4e22";
+        public static readonly OrderEntity CANCELLED_BUY_ORDER = new OrderEntity
+        {
+            Id = CANCELLED_BUY_ORDER_ID,
+            OwnerId = TESTUSER_ID,
+            PortfolioId = TESTUSER_PORTFOLIO.Id,
+            AssetSymbol = DKK_STOCK.Symbol,
+            AssetType = DKK_STOCK.Type,
+            OrderType = OrderType.Buy,
+            OrderStatus = OrderStatus.Cancelled,
+            Price = 100M,
+            Quantity = 10,
+            CreatedAt = Convert.ToDateTime("2/5/2021 08:00:11 AM").ToUniversalTime(),
+            ExpiresAt = Convert.ToDateTime("2/6/2021 08:00:00 AM").ToUniversalTime()
         };
     }
 }
