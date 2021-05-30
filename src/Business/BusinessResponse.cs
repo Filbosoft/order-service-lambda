@@ -1,3 +1,5 @@
+using System;
+
 namespace Business
 {
     public static class BusinessResponse
@@ -7,14 +9,14 @@ namespace Business
             {
                 Data = data,
                 Message = message,
-                IsError = false
+                ResponseCode = BusinessResponseCodes.Success
             };
-        public static BusinessResponse<T> Fail<T>(string message, T data = default) => 
+        public static BusinessResponse<T> Fail<T>(Enum responseCode, string message, T data = default) => 
             new BusinessResponse<T>
             {
                 Data = data,
                 Message = message,
-                IsError = true
+                ResponseCode = responseCode
             };
         
     }
@@ -22,6 +24,6 @@ namespace Business
     {
         public T Data { get; set; }
         public string Message { get; set; }
-        public bool IsError { get; set; }
+        public Enum ResponseCode { get; set; }
     }
 }

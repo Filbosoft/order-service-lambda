@@ -9,4 +9,9 @@ namespace Business.Commands
         public string OrderId { get; set; }
         public DateTime OrderCreatedAt { get; set; }
     }
+
+    public enum CancelOrderResponseCodes
+    {
+        Success
+    }
 }

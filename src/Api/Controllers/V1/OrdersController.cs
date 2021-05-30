@@ -17,8 +17,8 @@ namespace Api.Controllers
     [Produces("application/json")]
     public class OrdersController : ControllerBase
     {
-        private readonly IMediator _mediator;        
-        
+        private readonly IMediator _mediator;
+
         public OrdersController(IMediator mediator)
         {
             _mediator = mediator;
@@ -29,15 +29,22 @@ namespace Api.Controllers
         {
             var response = await _mediator.Send(command);
 
-            if (response.IsError)
-                return BadRequest(response.Message);
+            switch (response.ResponseCode)
+            {
+                case CreateOrderResponseCodes.PortfolioNotFound:
+                case CreateOrderResponseCodes.AssetNotFound:
+                case CreateOrderResponseCodes.ValidationFailed:
+                    return BadRequest(response.Message);
 
-            var newOrder = response.Data;
-            return CreatedAtAction(
-                nameof(GetOrderById),
-                new { Id = newOrder.Id },
-                newOrder
-            );
+                case CreateOrderResponseCodes.Success:
+                default:
+                    var newOrder = response.Data;
+                    return CreatedAtAction(
+                        nameof(GetOrderById),
+                        new { Id = newOrder.Id },
+                        newOrder
+                    );
+            }
         }
 
         [HttpGet]
@@ -66,25 +73,32 @@ namespace Api.Controllers
             };
             var response = await _mediator.Send(query);
 
-            if (response.IsError)
-                return NotFound(response.Message);
-
-            var orders = response.Data;
-            return Ok(orders);
+            switch (response.ResponseCode)
+            {
+                case GetOrdersResponseCodes.Success:
+                default:
+                    var orders = response.Data;
+                    return Ok(orders);
+            }
         }
-        
+
         [HttpGet]
         [Route("{id}")]
         public async Task<IActionResult> GetOrderById([FromRoute] string id)
         {
-            var query = new GetOrderByIdQuery {OrderId = id};
+            var query = new GetOrderByIdQuery { OrderId = id };
             var response = await _mediator.Send(query);
 
-            if (response.IsError)
-                return NotFound(response.Message);
+            switch (response.ResponseCode)
+            {
+                case GetOrderByIdResponseCodes.OrderNotFound:
+                    return NotFound(response.Message);
 
-            var order = response.Data;
-            return Ok(order);
+                case GetOrderByIdResponseCodes.Success:
+                default:
+                    var order = response.Data;
+                    return Ok(order);
+            }
         }
 
         [HttpPut]
@@ -94,11 +108,21 @@ namespace Api.Controllers
             command.Id = id;
             var response = await _mediator.Send(command);
 
-            if (response.IsError)
-                return BadRequest(response.Message);
-            
-            var updatedOrder = response.Data;
-            return Accepted(updatedOrder);
+            switch (response.ResponseCode)
+            {
+                case UpdateOrderResponseCodes.OrderNotFound:
+                    return NotFound(response.Message);
+
+                case UpdateOrderResponseCodes.OrderNotActive:
+                case UpdateOrderResponseCodes.ValidationFailed:
+                    return BadRequest(response.Message);
+
+                case UpdateOrderResponseCodes.NoUpdatesFound:
+                case UpdateOrderResponseCodes.Success:
+                default:
+                    var updatedOrder = response.Data;
+                    return Accepted(updatedOrder);
+            }
         }
     }
 }

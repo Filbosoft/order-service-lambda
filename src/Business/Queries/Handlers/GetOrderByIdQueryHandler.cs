@@ -51,7 +51,9 @@ namespace Business.Queries.Handlers
                 .FirstOrDefault();
             
             if (orderEntity == null)
-                return BusinessResponse.Fail<OrderDetail>($"No order with the id of {request.OrderId} was found");
+                return BusinessResponse.Fail<OrderDetail>(
+                    GetOrderByIdResponseCodes.OrderNotFound,
+                    $"No order with the id of {request.OrderId} was found");
 
             var orderDetail = _mapper.Map<OrderDetail>(orderEntity);
 

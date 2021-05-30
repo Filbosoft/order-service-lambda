@@ -9,4 +9,10 @@ namespace Business.Queries
         [Required]
         public string OrderId { get; set; }
     }
+
+    public enum GetOrderByIdResponseCodes
+    {
+        Success,
+        OrderNotFound
+    }
 }

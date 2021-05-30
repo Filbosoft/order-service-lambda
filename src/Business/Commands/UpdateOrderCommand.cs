@@ -12,4 +12,13 @@ namespace Business.Commands
         public bool Cancel { get; set; } = false;
         public DateTime? ExpiresAt { get; set; }
     }
+
+    public enum UpdateOrderResponseCodes
+    {
+        Success,
+        OrderNotFound,
+        OrderNotActive,
+        ValidationFailed,
+        NoUpdatesFound
+    }
 }

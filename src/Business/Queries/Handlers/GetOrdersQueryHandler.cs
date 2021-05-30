@@ -6,15 +6,12 @@ using Business.Wrappers;
 using System.Linq;
 using System;
 using Conditus.Trader.Domain.Models;
-using Conditus.Trader.Domain.Enums;
 using Amazon.DynamoDBv2.Model;
 using Conditus.Trader.Domain.Entities;
 using Amazon.DynamoDBv2;
-using Conditus.Trader.Domain;
 using Database.Indexes;
 using Conditus.DynamoDBMapper.Mappers;
 using Business.HelperMethods;
-using Amazon.DynamoDBv2.DataModel;
 
 namespace Business.Queries.Handlers
 {
@@ -227,7 +224,7 @@ namespace Business.Queries.Handlers
         ***/
         private void AddIndexCondition(string expectedIndex, string actualIndex, string condition)
         {
-            if (actualIndex == expectedIndex //If the indexes are null, Equals will throw a NullReferenceException
+            if (actualIndex == expectedIndex //If the indexes are null Equals will throw a NullReferenceException
                 || actualIndex.Equals(expectedIndex))
                     KeyConditions.Add(condition);
                 else FilterConditions.Add(condition);

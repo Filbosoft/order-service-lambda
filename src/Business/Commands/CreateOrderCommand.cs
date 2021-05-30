@@ -23,4 +23,12 @@ namespace Business.Commands
         [DateTimeLaterThanUTCNowValidationAttribute]
         public DateTime? ExpiresAt { get; set; }
     }
+
+    public enum CreateOrderResponseCodes
+    {
+        Success,
+        PortfolioNotFound,
+        AssetNotFound,
+        ValidationFailed
+    }
 }

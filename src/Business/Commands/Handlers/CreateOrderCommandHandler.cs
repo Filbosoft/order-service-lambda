@@ -42,17 +42,23 @@ namespace Business.Commands.Handlers
         {
             var portfolio = await _portfolioRepository.GetPortfolioById(request.PortfolioId);
             if (portfolio == null)
-                return BusinessResponse.Fail<OrderDetail>("Error occurred trying to get portfolio");
+                return BusinessResponse.Fail<OrderDetail>(
+                    CreateOrderResponseCodes.PortfolioNotFound,
+                    "Error occurred trying to get portfolio");
 
             var asset = await _assetRepository.GetAssetBySymbol(request.AssetSymbol);
             if (asset == null)
-                return BusinessResponse.Fail<OrderDetail>("Error occurred trying to get asset");
+                return BusinessResponse.Fail<OrderDetail>(
+                    CreateOrderResponseCodes.AssetNotFound,
+                    "Error occurred trying to get asset");
 
             IValidationRequest validationRequest = GetValidationRequest(request, portfolio, asset);
             var validationResult = await _mediator.Send(validationRequest);
 
             if (validationResult != ValidationResult.Success)
-                return BusinessResponse.Fail<OrderDetail>(validationResult.ErrorMessage);
+                return BusinessResponse.Fail<OrderDetail>(
+                    CreateOrderResponseCodes.ValidationFailed,
+                    validationResult.ErrorMessage);
 
             var entity = _mapper.Map<OrderEntity>(request);
             entity.Id = Guid.NewGuid().ToString();

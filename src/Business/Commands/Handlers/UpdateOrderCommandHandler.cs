@@ -45,10 +45,14 @@ namespace Business.Commands.Handlers
             );
 
             if (entity == null)
-                return BusinessResponse.Fail<OrderDetail>($"No order with the id of {request.Id} was found");
+                return BusinessResponse.Fail<OrderDetail>(
+                    UpdateOrderResponseCodes.OrderNotFound,
+                    $"No order with the id of {request.Id} was found");
 
             if (!entity.OrderStatus.Equals(OrderStatus.Active))
-                return BusinessResponse.Fail<OrderDetail>($"Can only update active orders");
+                return BusinessResponse.Fail<OrderDetail>(
+                    UpdateOrderResponseCodes.OrderNotActive,
+                    $"Can only update active orders");
 
             if (request.Cancel)
             {
@@ -66,11 +70,15 @@ namespace Business.Commands.Handlers
             var validationResult = await _mediator.Send(validationRequest);
 
             if (validationResult != ValidationResult.Success)
-                return BusinessResponse.Fail<OrderDetail>(validationResult.ErrorMessage);
+                return BusinessResponse.Fail<OrderDetail>(
+                    UpdateOrderResponseCodes.ValidationFailed,
+                    validationResult.ErrorMessage);
 
             var updateRequest = GetUpdateRequest(request, entity);
             if (updateRequest == null)
-                return BusinessResponse.Fail<OrderDetail>("No updates was found");
+                return BusinessResponse.Fail<OrderDetail>(
+                    UpdateOrderResponseCodes.NoUpdatesFound,
+                    "No updates was found");
 
             var response = await _db.UpdateItemAsync(updateRequest);
             var updatedEntity = response.Attributes.ToEntity<OrderEntity>();

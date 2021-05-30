@@ -18,4 +18,9 @@ namespace Business.Queries
         public DateTime? CompletedFromDate { get; set; }
         public DateTime? CompletedToDate { get; set; }
     }
+
+    public enum GetOrdersResponseCodes
+    {
+        Success
+    }
 }
