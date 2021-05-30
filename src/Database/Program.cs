@@ -65,7 +65,8 @@ namespace Database
                 catch (ArgumentOutOfRangeException)
                 { }
 
-                var serviceURL = followingArg != null ? followingArg : "http://localhost:8000";
+                var servicePort = followingArg != null ? followingArg : "8000";
+                var serviceURL = "http://localhost:" + servicePort;
 
                 clientConfig.ServiceURL = serviceURL;
             }

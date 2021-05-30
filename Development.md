@@ -14,7 +14,7 @@ To setup local DynamoDB databases for testing and development run:
 1. Start containers: `docker-compose -f .development/localdevelopment.yaml up -d`
 2. Migrate databases:
     - `dotnet run -p src/Database/ up --local`
-    - `dotnet run -p src/Database/ up --local http://localhost:9000`
+    - `dotnet run -p src/Database/ up --local 9000`
 
 #### Local NuGet feed / Conditus packages
 Create a 'nuget.config' file with a source pointing to your local nuget feed.
