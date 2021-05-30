@@ -54,6 +54,8 @@ namespace Business.Commands
             _dbContext = dbContext;
         }
 
+        private const string DEFAULT_PORTFOLIO_CURRENCY_CODE = "DKK";
+
         public async Task<BusinessResponse<OrderDetail>> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
         {
             var portfolio = await _portfolioRepository.GetPortfolioById(request.PortfolioId);
@@ -73,6 +75,7 @@ namespace Business.Commands
             var entity = _mapper.Map<OrderEntity>(request);
             entity.Id = Guid.NewGuid().ToString();
             entity.AssetName = asset.Name;
+            
             if (request.ExpiresAt == null)
                 entity.ExpiresAt = DateTime.UtcNow.AddDays(1);
 

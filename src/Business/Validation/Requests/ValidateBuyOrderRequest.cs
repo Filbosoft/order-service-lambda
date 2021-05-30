@@ -24,29 +24,26 @@ namespace Business.Validation.Requests
 
     public class ValidateBuyOrderRequestHandler : IValidationHandler<ValidateBuyOrderRequest>
     {
-        private readonly IMapper _mapper;
         private readonly ICurrencyRepository _currencyRepository;
 
-        public ValidateBuyOrderRequestHandler(IMapper mapper, ICurrencyRepository currencyRepository)
+        public ValidateBuyOrderRequestHandler(ICurrencyRepository currencyRepository)
         {
-            _mapper = mapper;
             _currencyRepository = currencyRepository;
         }
 
-        private const string DEFAULT_PORTFOLIO_CURRENCY_SYMBOL = "DKK";
-
         public async Task<ValidationResult> Handle(ValidateBuyOrderRequest request, CancellationToken cancellationToken)
         {
-            decimal orderCost;
-            if (request.Asset.Currency.Code.Equals(DEFAULT_PORTFOLIO_CURRENCY_SYMBOL))
-                orderCost = request.Price * request.Quantity;
-            else
-                orderCost =  await _currencyRepository.ConvertCurrency(
-                    request.Asset.Currency.Code,
-                    DEFAULT_PORTFOLIO_CURRENCY_SYMBOL,
-                    request.Quantity);
+            var assetCurrency = request.Asset.Currency.Code;
+            var portfolioCurrency = request.Portfolio.CurrencyCode;
+
+            decimal orderCostInPortfolioCurrency = assetCurrency.Equals(portfolioCurrency) ?
+                request.Price * request.Quantity
+                : await _currencyRepository.ConvertCurrency(
+                    assetCurrency,
+                    portfolioCurrency,
+                    request.Price * request.Quantity);
             
-            var remainingCapital = request.Portfolio.Capital - orderCost;
+            var remainingCapital = request.Portfolio.Capital - orderCostInPortfolioCurrency;
 
             if (remainingCapital < 0)
                 return new ValidationResult("Insufficient capital in portfolio to complete this order");

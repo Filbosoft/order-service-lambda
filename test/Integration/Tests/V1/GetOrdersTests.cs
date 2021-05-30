@@ -83,7 +83,7 @@ namespace Integration.Tests.V1
         public async void GetOrders_WithPortfolioId_ShouldReturnAllPortfolioOrders()
         {
             //Given
-            var query = $"portfolioId={TESTUSER_PORTFOLIO.Id}";
+            var query = $"portfolioId={USER_DKK_PORTFOLIO.Id}";
             var uri = $"{BASE_URL}?{query}";
 
             //When

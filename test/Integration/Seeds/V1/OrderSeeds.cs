@@ -15,7 +15,7 @@ namespace Integration.Seeds.V1
         {
             Id = COMPLETED_BUY_ORDER_ID,
             OwnerId = TESTUSER_ID,
-            PortfolioId = TESTUSER_PORTFOLIO.Id,
+            PortfolioId = USER_DKK_PORTFOLIO.Id,
             AssetSymbol = DKK_STOCK.Symbol,
             AssetType = DKK_STOCK.Type,
             OrderType = OrderType.Buy,
@@ -30,7 +30,7 @@ namespace Integration.Seeds.V1
         {
             Id = "a3afc58f-1e54-43f0-9dd2-952ddf1a1130",
             OwnerId = TESTUSER_ID,
-            PortfolioId = TESTUSER_PORTFOLIO.Id,
+            PortfolioId = USER_DKK_PORTFOLIO.Id,
             AssetSymbol = DKK_STOCK.Symbol,
             AssetType = DKK_STOCK.Type,
             OrderType = OrderType.Buy,
@@ -44,7 +44,7 @@ namespace Integration.Seeds.V1
         {
             Id = "bdb60a21-9639-4628-b53a-0de7651273bf",
             OwnerId = TESTUSER_ID,
-            PortfolioId = TESTUSER_PORTFOLIO.Id,
+            PortfolioId = USER_DKK_PORTFOLIO.Id,
             AssetSymbol = DKK_STOCK.Symbol,
             AssetType = DKK_STOCK.Type,
             OrderType = OrderType.Sell,
@@ -59,7 +59,7 @@ namespace Integration.Seeds.V1
         {
             Id = "566a3f10-a38f-4cf7-8b98-cfeecd67adfe",
             OwnerId = TESTUSER_ID,
-            PortfolioId = TESTUSER_PORTFOLIO.Id,
+            PortfolioId = USER_DKK_PORTFOLIO.Id,
             AssetSymbol = DKK_STOCK.Symbol,
             AssetType = DKK_STOCK.Type,
             OrderType = OrderType.Sell,
@@ -73,7 +73,7 @@ namespace Integration.Seeds.V1
         {
             Id = "732c1796-d5c8-4a33-b680-67cc722457d7",
             OwnerId = TESTUSER_ID,
-            PortfolioId = TESTUSER_PORTFOLIO.Id,
+            PortfolioId = USER_DKK_PORTFOLIO.Id,
             AssetSymbol = DKK_STOCK.Symbol,
             AssetType = DKK_STOCK.Type,
             OrderType = OrderType.Buy,
@@ -87,7 +87,7 @@ namespace Integration.Seeds.V1
         {
             Id = "41c711a7-602a-406f-a070-12724f918060",
             OwnerId = TESTUSER_ID,
-            PortfolioId = TESTUSER_PORTFOLIO.Id,
+            PortfolioId = USER_DKK_PORTFOLIO.Id,
             AssetSymbol = DKK_STOCK.Symbol,
             AssetType = DKK_STOCK.Type,
             OrderType = OrderType.Buy,
@@ -147,7 +147,7 @@ namespace Integration.Seeds.V1
         {
             Id = "2eb225a6-035c-462a-a781-ce8d8cf2d08c",
             OwnerId = TESTUSER_ID,
-            PortfolioId = TESTUSER_PORTFOLIO.Id,
+            PortfolioId = USER_DKK_PORTFOLIO.Id,
             AssetSymbol = "NonExistingAsset",
             AssetType = AssetType.Stock,
             OrderType = OrderType.Buy,
@@ -162,7 +162,7 @@ namespace Integration.Seeds.V1
         {
             Id = "ce6ac2d2-f42a-4df0-8953-ae2be90f8c8d",
             OwnerId = TESTUSER_ID,
-            PortfolioId = TESTUSER_PORTFOLIO.Id,
+            PortfolioId = USER_DKK_PORTFOLIO.Id,
             AssetSymbol = "NonExistingAsset",
             AssetType = AssetType.Stock,
             OrderType = OrderType.Buy,
@@ -178,7 +178,7 @@ namespace Integration.Seeds.V1
         {
             Id = EXPIRES_BUY_ORDER_ID,
             OwnerId = TESTUSER_ID,
-            PortfolioId = TESTUSER_PORTFOLIO.Id,
+            PortfolioId = USER_DKK_PORTFOLIO.Id,
             AssetSymbol = DKK_STOCK.Symbol,
             AssetType = DKK_STOCK.Type,
             OrderType = OrderType.Buy,
@@ -194,7 +194,7 @@ namespace Integration.Seeds.V1
         {
             Id = CANCELLED_BUY_ORDER_ID,
             OwnerId = TESTUSER_ID,
-            PortfolioId = TESTUSER_PORTFOLIO.Id,
+            PortfolioId = USER_DKK_PORTFOLIO.Id,
             AssetSymbol = DKK_STOCK.Symbol,
             AssetType = DKK_STOCK.Type,
             OrderType = OrderType.Buy,

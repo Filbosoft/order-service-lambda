@@ -14,6 +14,7 @@ using Conditus.Trader.Domain;
 using Database.Indexes;
 using Conditus.DynamoDBMapper.Mappers;
 using Business.HelperMethods;
+using Amazon.DynamoDBv2.DataModel;
 
 namespace Business.Queries
 {
@@ -63,6 +64,7 @@ namespace Business.Queries
         ***/
         private List<string> KeyConditions { get; set; } = new List<string>();
         private List<string> FilterConditions { get; set; } = new List<string>();
+        private Dictionary<string, AttributeValue> ExpressionAttributeValues { get; set; } = new Dictionary<string, AttributeValue>();
 
         /***
         * Query parameters
@@ -220,13 +222,26 @@ namespace Business.Queries
                 new AttributeValue { S = request.RequestingUserId });
         }
 
+        private void AddIndexCondition(object attribute, QueryRequest query, string expectedIndex, string condition, string conditionKey )
+        {
+            AddIndexCondition(
+                    expectedIndex,
+                    query.IndexName,
+                    condition);
+
+            query.ExpressionAttributeValues.Add(
+                conditionKey,
+                attribute.GetAttributeValue());
+        }
+
         /***
         * AddIndexCondition adds the condition to either the KeyConditions or the FilterConditions
         * based on the selected index for the query.
         ***/
         private void AddIndexCondition(string expectedIndex, string actualIndex, string condition)
         {
-            if (actualIndex == expectedIndex || actualIndex.Equals(expectedIndex))
+            if (actualIndex == expectedIndex //If the indexes are null, Equals will throw a NullReferenceException
+                || actualIndex.Equals(expectedIndex))
                     KeyConditions.Add(condition);
                 else FilterConditions.Add(condition);
         }

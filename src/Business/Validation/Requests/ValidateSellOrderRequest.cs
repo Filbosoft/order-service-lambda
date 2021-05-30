@@ -28,13 +28,6 @@ namespace Business.Validation.Requests
 
     public class ValidateSellOrderRequestHandler : IValidationHandler<ValidateSellOrderRequest>
     {
-        private readonly IMapper _mapper;
-
-        public ValidateSellOrderRequestHandler(IMapper mapper)
-        {
-            _mapper = mapper;
-        }
-
         public async Task<ValidationResult> Handle(ValidateSellOrderRequest request, CancellationToken cancellationToken)
         {
             var portfolioAsset = request.Portfolio.Assets

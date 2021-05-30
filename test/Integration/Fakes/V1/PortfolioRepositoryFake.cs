@@ -12,7 +12,7 @@ namespace Integration.Fakes.V1
     {
         private static List<PortfolioDetail> TestUserPortfolios = new List<PortfolioDetail>
         {
-            TESTUSER_PORTFOLIO
+            USER_DKK_PORTFOLIO
         };
 
         public async Task<PortfolioDetail> GetPortfolioById(string portfolioId)

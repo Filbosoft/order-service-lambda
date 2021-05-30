@@ -17,7 +17,7 @@ namespace Integration.Fakes.V1
 
         public async Task<decimal> ConvertCurrency(string fromSymbol, string toSymbol, decimal amount)
         {
-            return await Task.FromResult(amount * COVERSION_RATE);
+            return await Task.FromResult(amount * CONVERSION_RATE);
         }
     }
 }

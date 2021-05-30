@@ -6,7 +6,7 @@ namespace Integration.Seeds.V1
 {
     public static class CurrencySeeds
     {
-        public const decimal COVERSION_RATE = 5M;
+        public const decimal CONVERSION_RATE = 5M;
         
         public static readonly Currency DKK = new Currency
         {

@@ -17,6 +17,7 @@ using Conditus.Trader.Domain.Entities;
 using static Integration.Tests.V1.TestConstants;
 using static Integration.Seeds.V1.AssetSeeds;
 using static Integration.Seeds.V1.PortfolioSeeds;
+using static Integration.Seeds.V1.CurrencySeeds;
 
 namespace Integration.Tests.V1
 {
@@ -47,7 +48,7 @@ namespace Integration.Tests.V1
                 AssetSymbol = DKK_STOCK.Symbol,
                 Price = 100.1M,
                 Quantity = 1,
-                PortfolioId = TESTUSER_PORTFOLIO.Id,
+                PortfolioId = USER_DKK_PORTFOLIO.Id,
                 ExpiresAt = DateTime.UtcNow.AddDays(1)
             };
 
@@ -92,14 +93,14 @@ namespace Integration.Tests.V1
         public async void CreateBuyOrder_WithInsufficientCapitalInPortfolio_ShouldReturnBadRequest()
         {
             //Given
-            var price = TESTUSER_PORTFOLIO.Capital + 1;
+            var price = USER_DKK_PORTFOLIO.Capital + 1;
             var createOrderCommand = new CreateOrderCommand
             {
                 Type = OrderType.Buy,
                 AssetSymbol = DKK_STOCK.Symbol,
                 Price = price,
                 Quantity = 1,
-                PortfolioId = TESTUSER_PORTFOLIO.Id,
+                PortfolioId = USER_DKK_PORTFOLIO.Id,
                 ExpiresAt = DateTime.UtcNow.AddDays(1)
             };
 
@@ -120,7 +121,7 @@ namespace Integration.Tests.V1
                 AssetSymbol = DKK_STOCK.Symbol,
                 Price = 100.1M,
                 Quantity = 100,
-                PortfolioId = TESTUSER_PORTFOLIO.Id,
+                PortfolioId = USER_DKK_PORTFOLIO.Id,
                 ExpiresAt = DateTime.UtcNow.AddDays(1)
             };
 
@@ -172,7 +173,7 @@ namespace Integration.Tests.V1
                 AssetSymbol = DKK_STOCK.Symbol,
                 Price = 100.1M,
                 Quantity = quantity,
-                PortfolioId = TESTUSER_PORTFOLIO.Id,
+                PortfolioId = USER_DKK_PORTFOLIO.Id,
                 ExpiresAt = DateTime.UtcNow.AddDays(1)
             };
 
@@ -258,7 +259,7 @@ namespace Integration.Tests.V1
                 AssetSymbol = DKK_STOCK.Symbol,
                 Price = 100.1M,
                 Quantity = 100,
-                PortfolioId = TESTUSER_PORTFOLIO.Id
+                PortfolioId = USER_DKK_PORTFOLIO.Id
             };
 
             //When
@@ -273,6 +274,27 @@ namespace Integration.Tests.V1
             var dbOrder = await _dbContext.LoadAsync<OrderEntity>(TESTUSER_ID, order.CreatedAt);
 
             dbOrder.ExpiresAt.Should().BeCloseTo(DateTime.UtcNow.AddDays(1), 60000);
+        }
+
+        [Fact]
+        public async void CreateOrder_WithDifferentAssetCurrencyThanPortfolioCurrencyAndInsufficientCapital_ShouldReturnBadRequest()
+        {
+            //Given
+            var price = (USER_DKK_PORTFOLIO.Capital / CONVERSION_RATE) + 1; 
+            var createOrderCommand = new CreateOrderCommand
+            {
+                Type = OrderType.Buy,
+                AssetSymbol = USD_STOCK.Symbol,
+                Price = price,
+                Quantity = 1,
+                PortfolioId = USER_DKK_PORTFOLIO.Id
+            };
+
+            //When
+            var httpResponse = await _client.PostAsync(BASE_URL, HttpSerializer.GetStringContent(createOrderCommand));
+
+            //Then
+            httpResponse.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
         }
     }
 }
