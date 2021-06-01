@@ -27,7 +27,7 @@ namespace Integration
         public CustomWebApplicationFactory()
         {
             /***
-            * Gets the configuration from the appsettings.Testing.json placed in the Api/conf folder.
+            * Gets the configuration from the appsettings.Testing.json placed in the Api folder.
             ***/
             var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Testing";
             Configuration = new ConfigurationBuilder()

@@ -33,9 +33,9 @@ namespace Api
         {
             var authOptions = Configuration.GetSection("Auth")
                 .Get<JwtBearerOptions>();
-            
+
             services.AddAuthentication("Bearer")
-                .AddJwtBearer(options => 
+                .AddJwtBearer(options =>
                 {
                     options.Audience = authOptions.Audience;
                     options.Authority = authOptions.Authority;
@@ -59,10 +59,10 @@ namespace Api
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            // if (env.IsDevelopment())
-            // {
-            //     app.UseDeveloperExceptionPage();
-            // }
+            if (env.IsDevelopment())
+                app.UseDeveloperExceptionPage();
+            else
+                app.UseExceptionHandler("/error");
 
             app.UseHttpsRedirection();
 

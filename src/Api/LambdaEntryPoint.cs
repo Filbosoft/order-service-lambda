@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Api
 {
@@ -35,6 +36,7 @@ namespace Api
         protected override void Init(IWebHostBuilder builder)
         {
             builder
+                .AddLogging()
                 .UseStartup<Startup>();
         }
 

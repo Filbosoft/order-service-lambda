@@ -40,11 +40,9 @@ namespace Integration.Tests.V1
         {
             var seedOrders = new List<OrderEntity>
             {
-                ACTIVE_BUY_ORDER,
                 COMPLETED_BUY_ORDER,
                 EXPIRED_BUY_ORDER,
-                CANCELLED_BUY_ORDER,
-                ACTIVE_NONUSER_ORDER
+                CANCELLED_BUY_ORDER
             };
 
             var batchWrite = _dbContext.CreateBatchWrite<OrderEntity>();
@@ -77,6 +75,7 @@ namespace Integration.Tests.V1
         public async void UpdateOrder_WithValidPrice_ShouldReturnAcceptedAndTheUpdatedOrder()
         {
             //Given
+            await _dbContext.SaveAsync<OrderEntity>(ACTIVE_BUY_ORDER);
             var uri = $"{BASE_URL}/{ACTIVE_BUY_ORDER.Id}";
             var orderUpdater = new UpdateOrderCommand
             {
@@ -109,6 +108,7 @@ namespace Integration.Tests.V1
         public async void UpdateOrder_WithExpiresAt_ShouldReturnAcceptedAndTheUpdatedOrder()
         {
             //Given
+            await _dbContext.SaveAsync<OrderEntity>(ACTIVE_BUY_ORDER);
             var uri = $"{BASE_URL}/{ACTIVE_BUY_ORDER.Id}";
             var orderUpdater = new UpdateOrderCommand
             {
@@ -141,6 +141,7 @@ namespace Integration.Tests.V1
         public async void UpdateOrder_WithCancel_ShouldReturnAcceptedAndTheUpdatedOrder()
         {
             //Given
+            await _dbContext.SaveAsync<OrderEntity>(ACTIVE_BUY_ORDER);
             var uri = $"{BASE_URL}/{ACTIVE_BUY_ORDER.Id}";
             var orderUpdater = new UpdateOrderCommand
             {
@@ -173,6 +174,7 @@ namespace Integration.Tests.V1
         public async void UpdateOrder_WithNonUserOrderId_ShouldReturnNotFound()
         {
             //Given
+            await _dbContext.SaveAsync<OrderEntity>(ACTIVE_NONUSER_ORDER);
             var uri = $"{BASE_URL}/{ACTIVE_NONUSER_ORDER.Id}";
             var orderUpdater = new UpdateOrderCommand
             {
