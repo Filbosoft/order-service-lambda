@@ -1,11 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
+using Api.Responses.V1;
+using Business;
 using Business.Commands;
 using Business.Queries;
 using Conditus.Trader.Domain.Enums;
 using Conditus.Trader.Domain.Models;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
@@ -34,7 +39,12 @@ namespace Api.Controllers
                 case CreateOrderResponseCodes.PortfolioNotFound:
                 case CreateOrderResponseCodes.AssetNotFound:
                 case CreateOrderResponseCodes.ValidationFailed:
-                    return BadRequest(response.Message);
+                    var problem = new ProblemDetails
+                    {
+                        Title = response.ResponseCode.ToString(),
+                        Detail = response.Message
+                    };
+                    return BadRequest(problem);
 
                 case CreateOrderResponseCodes.Success:
                 default:
@@ -49,28 +59,8 @@ namespace Api.Controllers
 
         [HttpGet]
         public async Task<IActionResult> GetOrders(
-            [FromQuery] string portfolioId,
-            [FromQuery] OrderType? type,
-            [FromQuery] string assetSymbol,
-            [FromQuery] AssetType? assetType,
-            [FromQuery] OrderStatus? status,
-            [FromQuery] DateTime? createdFromDate,
-            [FromQuery] DateTime? createdToDate,
-            [FromQuery] DateTime? completedFromDate,
-            [FromQuery] DateTime? completedToDate)
+            [FromQuery] GetOrdersQuery query)
         {
-            var query = new GetOrdersQuery
-            {
-                PortfolioId = portfolioId,
-                Type = type,
-                AssetSymbol = assetSymbol,
-                AssetType = assetType,
-                Status = status,
-                CreatedFromDate = createdFromDate,
-                CreatedToDate = createdToDate,
-                CompletedFromDate = completedFromDate,
-                CompletedToDate = completedToDate
-            };
             var response = await _mediator.Send(query);
 
             switch (response.ResponseCode)
@@ -78,7 +68,13 @@ namespace Api.Controllers
                 case GetOrdersResponseCodes.Success:
                 default:
                     var orders = response.Data;
-                    return Ok(orders);
+                    var apiResponse = new PagedApiResponse<IEnumerable<OrderOverview>>
+                    {
+                        Data = orders,
+                        StatusCode = StatusCodes.Status200OK,
+                        Pagination = response.Pagination
+                    };
+                    return Ok(apiResponse);
             }
         }
 

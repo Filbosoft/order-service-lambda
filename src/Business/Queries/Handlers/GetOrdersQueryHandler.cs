@@ -34,13 +34,18 @@ namespace Business.Queries.Handlers
 
             var query = GetQueryRequest(request);
             var response = await _db.QueryAsync(query);
-            var orderEntities = response.Items
+            
+            var orderOverviews = response.Items
                 .Select(i => i.ToEntity<OrderEntity>())
-                .ToList();
+                .Select(_mapper.Map<OrderOverview>);
 
-            var orderOverviews = orderEntities.Select(_mapper.Map<OrderOverview>);
+            var pagination = new Pagination
+            {
+                PageSize = query.Limit,
+                PaginationToken = PaginationTokenHelper.GetTokenWithRangeKey<OrderEntity>(response.LastEvaluatedKey)
+            };
 
-            return BusinessResponse.Ok<IEnumerable<OrderOverview>>(orderOverviews);
+            return BusinessResponse.Ok<IEnumerable<OrderOverview>>(orderOverviews, pagination);
         }
 
         /***
@@ -48,7 +53,6 @@ namespace Business.Queries.Handlers
         ***/
         private List<string> KeyConditions { get; set; } = new List<string>();
         private List<string> FilterConditions { get; set; } = new List<string>();
-        private Dictionary<string, AttributeValue> ExpressionAttributeValues { get; set; } = new Dictionary<string, AttributeValue>();
 
         /***
         * Query parameters
@@ -73,18 +77,15 @@ namespace Business.Queries.Handlers
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
                     {V_CREATED_FROM_DATE, ((DateTime) request.CreatedFromDate).GetAttributeValue()}
-                }
+                },
+                Limit = request.PageSize
             };
 
             var index = GetOptimalOrderIndex(request);
             query.IndexName = index;
 
             SetQueryConditions(request, query);
-
-            query.KeyConditionExpression = string.Join(" AND ", KeyConditions);
-
-            if (FilterConditions.Count > 0)
-                query.FilterExpression = string.Join(" AND ", FilterConditions);
+            SetPagination(request, query);
 
             return query;
         }
@@ -204,30 +205,34 @@ namespace Business.Queries.Handlers
             query.ExpressionAttributeValues.Add(
                 V_REQUESTING_USER_ID,
                 new AttributeValue { S = request.RequestingUserId });
+
+            query.KeyConditionExpression = string.Join(" AND ", KeyConditions);
+
+            if (FilterConditions.Count > 0)
+                query.FilterExpression = string.Join(" AND ", FilterConditions);
         }
 
-        private void AddIndexCondition(object attribute, QueryRequest query, string expectedIndex, string condition, string conditionKey )
-        {
-            AddIndexCondition(
-                    expectedIndex,
-                    query.IndexName,
-                    condition);
-
-            query.ExpressionAttributeValues.Add(
-                conditionKey,
-                attribute.GetAttributeValue());
-        }
-
-        /***
-        * AddIndexCondition adds the condition to either the KeyConditions or the FilterConditions
-        * based on the selected index for the query.
-        ***/
+        /// <summary>
+        /// AddIndexCondition adds the condition to either the KeyConditions or the FilterConditions
+        /// based on the selected index for the query.
+        /// </summary>
+        /// <param name="expectedIndex"></param>
+        /// <param name="actualIndex"></param>
+        /// <param name="condition"></param>
         private void AddIndexCondition(string expectedIndex, string actualIndex, string condition)
         {
             if (actualIndex == expectedIndex //If the indexes are null Equals will throw a NullReferenceException
                 || actualIndex.Equals(expectedIndex))
                     KeyConditions.Add(condition);
                 else FilterConditions.Add(condition);
+        }
+
+        private void SetPagination(GetOrdersQuery request, QueryRequest query)
+        {
+            query.Limit = request.PageSize;
+
+            if (request.PaginationToken != null)
+                query.ExclusiveStartKey = PaginationTokenHelper.GetLastEvaluatedKeyWithRangeKey<OrderEntity>(request.PaginationToken);
         }
     }
 }

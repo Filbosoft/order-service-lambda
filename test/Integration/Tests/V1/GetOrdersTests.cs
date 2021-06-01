@@ -10,6 +10,9 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Integration.Utilities;
 using Conditus.Trader.Domain.Entities;
+using Api.Responses.V1;
+using Business.HelperMethods;
+using Conditus.DynamoDBMapper.Mappers;
 
 using static Integration.Tests.V1.TestConstants;
 using static Integration.Seeds.V1.OrderSeeds;
@@ -72,7 +75,8 @@ namespace Integration.Tests.V1
 
             //Then
             httpResponse.EnsureSuccessStatusCode();
-            var orders = await httpResponse.GetDeserializedResponseBodyAsync<IEnumerable<OrderOverview>>();
+            var apiResponse = await httpResponse.GetDeserializedResponseBodyAsync<PagedApiResponse<IEnumerable<OrderOverview>>>();
+            var orders = apiResponse.Data;
 
             orders.Should().NotBeNullOrEmpty()
                 .And.OnlyContain(o => o.CreatedAt >= DateTime.UtcNow.AddYears(-10))
@@ -91,7 +95,8 @@ namespace Integration.Tests.V1
 
             //Then
             httpResponse.EnsureSuccessStatusCode();
-            var orders = await httpResponse.GetDeserializedResponseBodyAsync<IEnumerable<OrderOverview>>();
+            var apiResponse = await httpResponse.GetDeserializedResponseBodyAsync<PagedApiResponse<IEnumerable<OrderOverview>>>();
+            var orders = apiResponse.Data;
 
             orders.Should().NotBeNullOrEmpty()
                 .And.NotContain(o => o.Id.Equals(COMPLETED_ORDER_FROM_ANOTHER_PORTFOLIO));
@@ -123,7 +128,8 @@ namespace Integration.Tests.V1
 
             //Then
             httpResponse.EnsureSuccessStatusCode();
-            var orders = await httpResponse.GetDeserializedResponseBodyAsync<IEnumerable<OrderOverview>>();
+            var apiResponse = await httpResponse.GetDeserializedResponseBodyAsync<PagedApiResponse<IEnumerable<OrderOverview>>>();
+            var orders = apiResponse.Data;
 
             orders.Should().NotBeNullOrEmpty()
                 .And.OnlyContain(o => o.AssetSymbol.Equals(DKK_STOCK.Symbol));
@@ -141,7 +147,8 @@ namespace Integration.Tests.V1
 
             //Then
             httpResponse.EnsureSuccessStatusCode();
-            var orders = await httpResponse.GetDeserializedResponseBodyAsync<IEnumerable<OrderOverview>>();
+            var apiResponse = await httpResponse.GetDeserializedResponseBodyAsync<PagedApiResponse<IEnumerable<OrderOverview>>>();
+            var orders = apiResponse.Data;
 
             orders.Should().NotBeNullOrEmpty()
                 .And.OnlyContain(o => o.Type.Equals(OrderType.Buy));
@@ -159,7 +166,8 @@ namespace Integration.Tests.V1
 
             //Then
             httpResponse.EnsureSuccessStatusCode();
-            var orders = await httpResponse.GetDeserializedResponseBodyAsync<IEnumerable<OrderOverview>>();
+            var apiResponse = await httpResponse.GetDeserializedResponseBodyAsync<PagedApiResponse<IEnumerable<OrderOverview>>>();
+            var orders = apiResponse.Data;
 
             orders.Should().NotBeNullOrEmpty()
                 .And.OnlyContain(o => o.Status.Equals(OrderStatus.Completed));
@@ -177,7 +185,8 @@ namespace Integration.Tests.V1
 
             //Then
             httpResponse.EnsureSuccessStatusCode();
-            var orders = await httpResponse.GetDeserializedResponseBodyAsync<IEnumerable<OrderOverview>>();
+            var apiResponse = await httpResponse.GetDeserializedResponseBodyAsync<PagedApiResponse<IEnumerable<OrderOverview>>>();
+            var orders = apiResponse.Data;
 
             orders.Should().NotBeNullOrEmpty()
                 .And.OnlyContain(o => o.CreatedAt >= COMPLETED_BUY_ORDER.CreatedAt);
@@ -196,7 +205,8 @@ namespace Integration.Tests.V1
 
             //Then
             httpResponse.EnsureSuccessStatusCode();
-            var orders = await httpResponse.GetDeserializedResponseBodyAsync<IEnumerable<OrderOverview>>();
+            var apiResponse = await httpResponse.GetDeserializedResponseBodyAsync<PagedApiResponse<IEnumerable<OrderOverview>>>();
+            var orders = apiResponse.Data;
 
             orders.Should().NotBeNullOrEmpty()
                 .And.OnlyContain(o => o.CreatedAt <= createdToDate);
@@ -214,7 +224,8 @@ namespace Integration.Tests.V1
 
             //Then
             httpResponse.EnsureSuccessStatusCode();
-            var orders = await httpResponse.GetDeserializedResponseBodyAsync<IEnumerable<OrderOverview>>();
+            var apiResponse = await httpResponse.GetDeserializedResponseBodyAsync<PagedApiResponse<IEnumerable<OrderOverview>>>();
+            var orders = apiResponse.Data;
 
             orders.Should().NotBeNullOrEmpty()
                 .And.OnlyContain(o => o.CompletedAt >= COMPLETED_BUY_ORDER.CompletedAt);
@@ -233,10 +244,58 @@ namespace Integration.Tests.V1
 
             //Then
             httpResponse.EnsureSuccessStatusCode();
-            var orders = await httpResponse.GetDeserializedResponseBodyAsync<IEnumerable<OrderOverview>>();
+            var apiResponse = await httpResponse.GetDeserializedResponseBodyAsync<PagedApiResponse<IEnumerable<OrderOverview>>>();
+            var orders = apiResponse.Data;
 
             orders.Should().NotBeNullOrEmpty()
                 .And.OnlyContain(o => o.CompletedAt <= completedToDate);
+        }
+
+        [Fact]
+        public async void GetOrders_WithPageSize_ShouldReturnSpecifiedPageSizeUserOrdersWithPagination()
+        {
+            //Given
+            var pageSize = 2;
+            var query = $"pageSize={pageSize}";
+            var uri = $"{BASE_URL}?{query}";
+
+            //When
+            var httpResponse = await _client.GetAsync(uri);
+
+            //Then
+            httpResponse.EnsureSuccessStatusCode();
+            var apiResponse = await httpResponse.GetDeserializedResponseBodyAsync<PagedApiResponse<IEnumerable<OrderOverview>>>();
+            var orders = apiResponse.Data;
+
+            orders.Should().NotBeNullOrEmpty()
+                .And.HaveCount(pageSize);
+            
+            apiResponse.Pagination.Should().NotBeNull();
+            apiResponse.Pagination.PageSize.Should().Be(pageSize);
+            apiResponse.Pagination.PaginationToken.Should().NotBeNullOrEmpty();
+        }
+
+        [Fact]
+        public async void GetOrders_WithPaginationToken_ShouldReturnUserOrdersPaginatedByTheProvidedToken()
+        {
+            //Given
+            var orderAttributeValueMap = ACTIVE_BUY_ORDER.GetAttributeValueMap();
+            var paginationToken = PaginationTokenHelper.GetTokenWithRangeKey<OrderEntity>(orderAttributeValueMap);
+            var query = $"paginationToken={paginationToken}";
+            var uri = $"{BASE_URL}?{query}";
+
+            //When
+            var httpResponse = await _client.GetAsync(uri);
+
+            //Then
+            httpResponse.EnsureSuccessStatusCode();
+            var apiResponse = await httpResponse.GetDeserializedResponseBodyAsync<PagedApiResponse<IEnumerable<OrderOverview>>>();
+            var orders = apiResponse.Data;
+
+            orders.Should().NotBeNullOrEmpty();
+            
+            apiResponse.Pagination.Should().NotBeNull();
+            apiResponse.Pagination.PaginationToken.Should().NotBeNullOrEmpty();
         }
     }
 }
