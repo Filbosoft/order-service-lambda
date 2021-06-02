@@ -41,6 +41,6 @@ aws cognito-idp initiate-auth --auth-flow USER_PASSWORD_AUTH --client-id 7omub5a
 - https://stackoverflow.com/questions/49063292/how-to-generate-access-token-for-an-aws-cognito-user 
 
 ## Deploying
-`dotnet lambda deploy-serverless conditus-trader-order-service --s3-bucket conditus-trader -t src/Api/serverless.template --s3-prefix order-service`
+`dotnet lambda deploy-serverless conditus-trader-order-service`
 
 - https://docs.aws.amazon.com/toolkit-for-visual-studio/latest/user-guide/lambda-cli-publish.html
