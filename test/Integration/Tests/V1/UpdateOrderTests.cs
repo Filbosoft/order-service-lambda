@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Http;
 using Integration.Utilities;
 using Business.Commands;
 using Conditus.Trader.Domain.Entities;
+using Api.Responses.V1;
+using Microsoft.AspNetCore.Mvc;
 
 using static Integration.Tests.V1.TestConstants;
 using static Integration.Seeds.V1.OrderSeeds;
@@ -69,6 +71,9 @@ namespace Integration.Tests.V1
 
             //Then
             httpResponse.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            var problem = await httpResponse.GetDeserializedResponseBodyAsync<ProblemDetails>();
+
+            problem.Title.Should().Be(UpdateOrderResponseCodes.OrderNotActive.ToString());
         }
 
         [Fact]
@@ -87,7 +92,8 @@ namespace Integration.Tests.V1
 
             //Then
             httpResponse.StatusCode.Should().Be(StatusCodes.Status202Accepted);
-            var updatedOrder = await httpResponse.GetDeserializedResponseBodyAsync<OrderDetail>();
+            var apiResponse = await httpResponse.GetDeserializedResponseBodyAsync<ApiResponse<OrderDetail>>();
+            var updatedOrder = apiResponse.Data;
 
             updatedOrder.Should().NotBeNull()
                 .And.BeEquivalentTo(ACTIVE_BUY_ORDER, options => options
@@ -120,7 +126,8 @@ namespace Integration.Tests.V1
 
             //Then
             httpResponse.StatusCode.Should().Be(StatusCodes.Status202Accepted);
-            var updatedOrder = await httpResponse.GetDeserializedResponseBodyAsync<OrderDetail>();
+            var apiResponse = await httpResponse.GetDeserializedResponseBodyAsync<ApiResponse<OrderDetail>>();
+            var updatedOrder = apiResponse.Data;
 
             updatedOrder.Should().NotBeNull()
                 .And.BeEquivalentTo(ACTIVE_BUY_ORDER, options => options
@@ -153,7 +160,8 @@ namespace Integration.Tests.V1
 
             //Then
             httpResponse.StatusCode.Should().Be(StatusCodes.Status202Accepted);
-            var updatedOrder = await httpResponse.GetDeserializedResponseBodyAsync<OrderDetail>();
+            var apiResponse = await httpResponse.GetDeserializedResponseBodyAsync<ApiResponse<OrderDetail>>();
+            var updatedOrder = apiResponse.Data;
 
             updatedOrder.Should().NotBeNull()
                 .And.BeEquivalentTo(ACTIVE_BUY_ORDER, options => options
@@ -186,6 +194,9 @@ namespace Integration.Tests.V1
 
             //Then
             httpResponse.StatusCode.Should().Be(StatusCodes.Status404NotFound);
+            var problem = await httpResponse.GetDeserializedResponseBodyAsync<ProblemDetails>();
+
+            problem.Title.Should().Be(UpdateOrderResponseCodes.OrderNotFound.ToString());
         }
 
         [Fact]
@@ -203,6 +214,9 @@ namespace Integration.Tests.V1
 
             //Then
             httpResponse.StatusCode.Should().Be(StatusCodes.Status404NotFound);
+            var problem = await httpResponse.GetDeserializedResponseBodyAsync<ProblemDetails>();
+
+            problem.Title.Should().Be(UpdateOrderResponseCodes.OrderNotFound.ToString());
         }
 
         [Fact]

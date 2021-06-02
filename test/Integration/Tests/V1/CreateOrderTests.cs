@@ -13,6 +13,8 @@ using Integration.Utilities;
 using Business.Commands;
 using FluentAssertions.Execution;
 using Conditus.Trader.Domain.Entities;
+using Api.Responses.V1;
+using Microsoft.AspNetCore.Mvc;
 
 using static Integration.Tests.V1.TestConstants;
 using static Integration.Seeds.V1.AssetSeeds;
@@ -57,7 +59,8 @@ namespace Integration.Tests.V1
 
             //Then
             httpResponse.StatusCode.Should().Be(StatusCodes.Status201Created);
-            var order = await httpResponse.GetDeserializedResponseBodyAsync<OrderDetail>();
+            var apiResponse = await httpResponse.GetDeserializedResponseBodyAsync<ApiResponse<OrderDetail>>();
+            var order = apiResponse.Data;
 
             using (new AssertionScope())
             {
@@ -109,6 +112,9 @@ namespace Integration.Tests.V1
 
             //Then
             httpResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            var problem = await httpResponse.GetDeserializedResponseBodyAsync<ProblemDetails>();
+
+            problem.Title.Should().Be(CreateOrderResponseCodes.ValidationFailed.ToString());
         }
 
         [Fact]
@@ -130,7 +136,8 @@ namespace Integration.Tests.V1
 
             //Then
             httpResponse.StatusCode.Should().Be(StatusCodes.Status201Created);
-            var order = await httpResponse.GetDeserializedResponseBodyAsync<OrderDetail>();
+            var apiResponse = await httpResponse.GetDeserializedResponseBodyAsync<ApiResponse<OrderDetail>>();
+            var order = apiResponse.Data;
 
             using (new AssertionScope())
             {
@@ -182,6 +189,9 @@ namespace Integration.Tests.V1
 
             //Then
             httpResponse.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            var problem = await httpResponse.GetDeserializedResponseBodyAsync<ProblemDetails>();
+
+            problem.Title.Should().Be(CreateOrderResponseCodes.ValidationFailed.ToString());
         }
 
         [Fact]
@@ -203,6 +213,9 @@ namespace Integration.Tests.V1
 
             //Then
             httpResponse.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            var problem = await httpResponse.GetDeserializedResponseBodyAsync<ProblemDetails>();
+
+            problem.Title.Should().Be(CreateOrderResponseCodes.PortfolioNotFound.ToString());
         }
 
         [Fact]
@@ -224,6 +237,9 @@ namespace Integration.Tests.V1
 
             //Then
             httpResponse.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            var problem = await httpResponse.GetDeserializedResponseBodyAsync<ProblemDetails>();
+
+            problem.Title.Should().Be(CreateOrderResponseCodes.PortfolioNotFound.ToString());
         }
 
         [Theory]
@@ -267,7 +283,8 @@ namespace Integration.Tests.V1
 
             //Then
             httpResponse.StatusCode.Should().Be(StatusCodes.Status201Created);
-            var order = await httpResponse.GetDeserializedResponseBodyAsync<OrderDetail>();
+            var apiResponse = await httpResponse.GetDeserializedResponseBodyAsync<ApiResponse<OrderDetail>>();
+            var order = apiResponse.Data;
 
             order.ExpiresAt.Should().BeCloseTo(DateTime.UtcNow.AddDays(1), 60000);
 
@@ -295,6 +312,9 @@ namespace Integration.Tests.V1
 
             //Then
             httpResponse.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            var problem = await httpResponse.GetDeserializedResponseBodyAsync<ProblemDetails>();
+
+            problem.Title.Should().Be(CreateOrderResponseCodes.ValidationFailed.ToString());
         }
     }
 }

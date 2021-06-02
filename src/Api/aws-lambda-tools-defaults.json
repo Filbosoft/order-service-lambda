@@ -10,6 +10,7 @@
   "configuration": "Release",
   "framework": "netcoreapp3.1",
   "s3-prefix": "order-service/",
+  "s3-bucket": "conditus-trader",
   "template": "serverless.template",
   "template-parameters": ""
 }

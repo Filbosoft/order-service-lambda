@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 using Api.Responses.V1;
-using Business;
 using Business.Commands;
 using Business.Queries;
-using Conditus.Trader.Domain.Enums;
 using Conditus.Trader.Domain.Models;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -42,17 +39,23 @@ namespace Api.Controllers
                     var problem = new ProblemDetails
                     {
                         Title = response.ResponseCode.ToString(),
-                        Detail = response.Message
+                        Detail = response.Message,
+                        Status = StatusCodes.Status400BadRequest
                     };
                     return BadRequest(problem);
 
                 case CreateOrderResponseCodes.Success:
                 default:
                     var newOrder = response.Data;
+                    var apiResponse = new ApiResponse<OrderDetail>
+                    {
+                        Data = newOrder,
+                        Status = StatusCodes.Status201Created
+                    };
                     return CreatedAtAction(
                         nameof(GetOrderById),
                         new { Id = newOrder.Id },
-                        newOrder
+                        apiResponse
                     );
             }
         }
@@ -71,7 +74,7 @@ namespace Api.Controllers
                     var apiResponse = new PagedApiResponse<IEnumerable<OrderOverview>>
                     {
                         Data = orders,
-                        StatusCode = StatusCodes.Status200OK,
+                        Status = StatusCodes.Status200OK,
                         Pagination = response.Pagination
                     };
                     return Ok(apiResponse);
@@ -88,12 +91,23 @@ namespace Api.Controllers
             switch (response.ResponseCode)
             {
                 case GetOrderByIdResponseCodes.OrderNotFound:
-                    return NotFound(response.Message);
+                    var problem = new ProblemDetails
+                    {
+                        Title = response.ResponseCode.ToString(),
+                        Detail = response.Message,
+                        Status = StatusCodes.Status404NotFound
+                    };
+                    return NotFound(problem);
 
                 case GetOrderByIdResponseCodes.Success:
                 default:
                     var order = response.Data;
-                    return Ok(order);
+                    var apiResponse = new ApiResponse<OrderDetail>
+                    {
+                        Data = order,
+                        Status = StatusCodes.Status200OK
+                    };
+                    return Ok(apiResponse);
             }
         }
 
@@ -107,17 +121,34 @@ namespace Api.Controllers
             switch (response.ResponseCode)
             {
                 case UpdateOrderResponseCodes.OrderNotFound:
-                    return NotFound(response.Message);
+                    var notFoundProblem = new ProblemDetails
+                    {
+                        Title = response.ResponseCode.ToString(),
+                        Detail = response.Message,
+                        Status = StatusCodes.Status404NotFound
+                    };
+                    return NotFound(notFoundProblem);
 
                 case UpdateOrderResponseCodes.OrderNotActive:
                 case UpdateOrderResponseCodes.ValidationFailed:
-                    return BadRequest(response.Message);
+                    var badRequestProblem = new ProblemDetails
+                    {
+                        Title = response.ResponseCode.ToString(),
+                        Detail = response.Message,
+                        Status = StatusCodes.Status400BadRequest
+                    };
+                    return BadRequest(badRequestProblem);
 
                 case UpdateOrderResponseCodes.NoUpdatesFound:
                 case UpdateOrderResponseCodes.Success:
                 default:
                     var updatedOrder = response.Data;
-                    return Accepted(updatedOrder);
+                    var apiResponse = new ApiResponse<OrderDetail>
+                    {
+                        Data = updatedOrder,
+                        Status = StatusCodes.Status202Accepted
+                    };
+                    return Accepted(apiResponse);
             }
         }
     }
