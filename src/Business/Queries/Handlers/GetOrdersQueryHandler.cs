@@ -26,26 +26,69 @@ namespace Business.Queries.Handlers
             _mapper = mapper;
         }
 
-
         public async Task<BusinessResponse<IEnumerable<OrderOverview>>> Handle(GetOrdersQuery request, CancellationToken cancellationToken)
         {
             if (request.CreatedFromDate == null)
                 request.CreatedFromDate = DateTime.UtcNow.AddYears(-10);
 
-            var query = GetQueryRequest(request);
-            var response = await _db.QueryAsync(query);
-            
-            var orderOverviews = response.Items
-                .Select(i => i.ToEntity<OrderEntity>())
+            var paginatedQueryResponse = await QueryPaginatedAsync(request);
+            var orderOverviews = paginatedQueryResponse.Items
+                .Select(m => m.ToEntity<OrderEntity>())
                 .Select(_mapper.Map<OrderOverview>);
-
-            var pagination = new Pagination
-            {
-                PageSize = query.Limit,
-                PaginationToken = PaginationTokenHelper.GetTokenWithRangeKey<OrderEntity>(response.LastEvaluatedKey)
-            };
+            
+            var pagination = GetPaginationFromQueryResponse(paginatedQueryResponse);
 
             return BusinessResponse.Ok<IEnumerable<OrderOverview>>(orderOverviews, pagination);
+        }
+
+        private async Task<QueryResponse> QueryPaginatedAsync(GetOrdersQuery request)
+        {
+            QueryResponse queryResponse = null;
+            List<Dictionary<string, AttributeValue>> orderMaps = new List<Dictionary<string, AttributeValue>>();
+            var query = GetQueryRequest(request);
+
+            do
+            {
+                queryResponse = await _db.QueryAsync(query);
+                orderMaps.AddRange(queryResponse.Items);
+                query.ExclusiveStartKey = queryResponse.LastEvaluatedKey;   
+            } while (queryResponse.LastEvaluatedKey.Count > 0 && orderMaps.Count < request.PageSize);
+
+            var pageSize = orderMaps.Count > request.PageSize ? request.PageSize : orderMaps.Count;
+            var pageOrderMaps = orderMaps.GetRange(0, pageSize);
+
+            var paginatedQueryResponse = new QueryResponse
+            {
+                Items = pageOrderMaps,
+                LastEvaluatedKey = queryResponse.LastEvaluatedKey,
+                Count = pageSize,
+                ScannedCount = orderMaps.Count
+            };
+
+            return paginatedQueryResponse;
+        }
+
+        private Pagination GetPaginationFromQueryResponse(QueryResponse queryResponse)
+        {
+            
+            string paginationToken = GetPaginationTokenFromQueryResponse(queryResponse);
+
+            return new Pagination
+            {
+                PageSize = queryResponse.Count,
+                PaginationToken = paginationToken
+            };
+        }
+
+        private string GetPaginationTokenFromQueryResponse(QueryResponse queryResponse)
+        {
+            if (queryResponse.LastEvaluatedKey.Count == 0)
+                return null;
+                
+            var lastOrderMap = queryResponse.Items.Last();
+            var paginationToken = PaginationTokenHelper.GetTokenWithRangeKey<OrderEntity>(lastOrderMap);
+
+            return paginationToken;
         }
 
         /***
@@ -85,15 +128,17 @@ namespace Business.Queries.Handlers
             query.IndexName = index;
 
             SetQueryConditions(request, query);
-            SetPagination(request, query);
+            SetQueryPagination(request, query);
 
             return query;
         }
 
-        /***
-        * This function returns the index name of the index that will result in the least amount of records.
-        * As it's only possible to query one index at a time, it's important to choose the optimal one for the query.
-        ***/
+        /// <summary>
+        /// This function returns the index name of the index that will result in the least amount of records.
+        /// As it's only possible to query one index at a time, it's important to choose the optimal one for the query.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns>The name of the optimal index for the given order</returns>
         public string GetOptimalOrderIndex(GetOrdersQuery request)
         {
             if (request.AssetSymbol != null)
@@ -150,7 +195,7 @@ namespace Business.Queries.Handlers
                 query.ExpressionAttributeValues.Add(
                     V_STATUS,
                     request.Status.GetAttributeValue());
-                    
+
             }
 
             if (request.PortfolioId != null)
@@ -223,11 +268,11 @@ namespace Business.Queries.Handlers
         {
             if (actualIndex == expectedIndex //If the indexes are null Equals will throw a NullReferenceException
                 || actualIndex.Equals(expectedIndex))
-                    KeyConditions.Add(condition);
-                else FilterConditions.Add(condition);
+                KeyConditions.Add(condition);
+            else FilterConditions.Add(condition);
         }
 
-        private void SetPagination(GetOrdersQuery request, QueryRequest query)
+        private void SetQueryPagination(GetOrdersQuery request, QueryRequest query)
         {
             query.Limit = request.PageSize;
 

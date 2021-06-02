@@ -255,7 +255,7 @@ namespace Integration.Tests.V1
         public async void GetOrders_WithPageSize_ShouldReturnSpecifiedPageSizeUserOrdersWithPagination()
         {
             //Given
-            var pageSize = 2;
+            var pageSize = 2; //More than 2 user orders should be seeded;
             var query = $"pageSize={pageSize}";
             var uri = $"{BASE_URL}?{query}";
 
@@ -268,10 +268,10 @@ namespace Integration.Tests.V1
             var orders = apiResponse.Data;
 
             orders.Should().NotBeNullOrEmpty()
-                .And.HaveCount(pageSize);
+                .And.HaveCountLessOrEqualTo(pageSize);
             
             apiResponse.Pagination.Should().NotBeNull();
-            apiResponse.Pagination.PageSize.Should().Be(pageSize);
+            apiResponse.Pagination.PageSize.Should().BeLessOrEqualTo(pageSize);
             apiResponse.Pagination.PaginationToken.Should().NotBeNullOrEmpty();
         }
 
