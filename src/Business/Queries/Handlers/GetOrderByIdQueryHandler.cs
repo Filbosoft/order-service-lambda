@@ -8,9 +8,9 @@ using Conditus.Trader.Domain.Models;
 using Amazon.DynamoDBv2.Model;
 using Conditus.Trader.Domain.Entities;
 using Amazon.DynamoDBv2;
-using Database.Indexes;
-using Conditus.DynamoDBMapper.Mappers;
-using Business.HelperMethods;
+using Conditus.DynamoDB.QueryExtensions.Extensions;
+using Conditus.DynamoDB.MappingExtensions.Mappers;
+using Conditus.Trader.Domain.Entities.LocalSecondaryIndexes;
 
 namespace Business.Queries.Handlers
 {
@@ -34,9 +34,9 @@ namespace Business.Queries.Handlers
         {
             var query = new QueryRequest
             {
-                TableName = DynamoDBHelper.GetDynamoDBTableName<OrderEntity>(),
+                TableName = typeof(OrderEntity).GetDynamoDBTableName(),
                 Select = "ALL_ATTRIBUTES",
-                IndexName = LocalIndexes.UserOrderIdIndex,
+                IndexName = OrderLocalSecondaryIndexes.UserOrderIdIndex,
                 KeyConditionExpression = $"{nameof(OrderEntity.OwnerId)} = {V_REQUESTING_USER_ID} AND {nameof(OrderEntity.Id)} = {V_ORDER_ID}",
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {

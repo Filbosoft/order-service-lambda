@@ -11,13 +11,14 @@ using Microsoft.AspNetCore.Http;
 using Integration.Utilities;
 using Conditus.Trader.Domain.Entities;
 using Api.Responses.V1;
-using Business.HelperMethods;
-using Conditus.DynamoDBMapper.Mappers;
+using Conditus.DynamoDB.QueryExtensions.Pagination;
 
 using static Integration.Tests.V1.TestConstants;
 using static Integration.Seeds.V1.OrderSeeds;
 using static Integration.Seeds.V1.PortfolioSeeds;
 using static Integration.Seeds.V1.AssetSeeds;
+using Conditus.DynamoDB.MappingExtensions.Mappers;
+using Amazon.DynamoDBv2.Model;
 
 namespace Integration.Tests.V1
 {
@@ -280,7 +281,12 @@ namespace Integration.Tests.V1
         {
             //Given
             var orderAttributeValueMap = ACTIVE_BUY_ORDER.GetAttributeValueMap();
-            var paginationToken = PaginationTokenHelper.GetTokenWithRangeKey<OrderEntity>(orderAttributeValueMap);
+            var lastEvaluatedKey = new Dictionary<string, AttributeValue>
+            {
+                {nameof(OrderEntity.OwnerId), ACTIVE_BUY_ORDER.OwnerId.GetAttributeValue()},
+                {nameof(OrderEntity.CreatedAt), ACTIVE_BUY_ORDER.CreatedAt.GetAttributeValue()}
+            };
+            var paginationToken = PaginationTokenConverter.GetToken<OrderEntity>(lastEvaluatedKey);
             var query = $"paginationToken={paginationToken}";
             var uri = $"{BASE_URL}?{query}";
 

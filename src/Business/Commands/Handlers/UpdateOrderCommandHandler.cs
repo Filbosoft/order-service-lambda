@@ -6,15 +6,14 @@ using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using AutoMapper;
-using Business.Extensions;
-using Business.HelperMethods;
 using Business.Validation.Requests;
 using Business.Wrappers;
-using Conditus.DynamoDBMapper.Mappers;
+using Conditus.DynamoDB.MappingExtensions.Mappers;
+using Conditus.DynamoDB.QueryExtensions.Extensions;
 using Conditus.Trader.Domain.Entities;
+using Conditus.Trader.Domain.Entities.LocalSecondaryIndexes;
 using Conditus.Trader.Domain.Enums;
 using Conditus.Trader.Domain.Models;
-using Database.Indexes;
 using MediatR;
 
 namespace Business.Commands.Handlers
@@ -37,12 +36,10 @@ namespace Business.Commands.Handlers
 
         public async Task<BusinessResponse<OrderDetail>> Handle(UpdateOrderCommand request, CancellationToken cancellationToken)
         {
-            var entity = await _db.LoadByLocalIndexAsync<OrderEntity>(
-                request.RequestingUserId,
-                nameof(OrderEntity.Id),
-                request.Id,
-                LocalIndexes.UserOrderIdIndex
-            );
+            var entity = await _db.LoadByLocalSecondaryIndexAsync<OrderEntity>(
+                request.RequestingUserId.GetAttributeValue(),
+                request.Id.GetAttributeValue(),
+                OrderLocalSecondaryIndexes.UserOrderIdIndex);
 
             if (entity == null)
                 return BusinessResponse.Fail<OrderDetail>(
@@ -100,7 +97,7 @@ namespace Business.Commands.Handlers
         {
             var updateRequest = new UpdateItemRequest
             {
-                TableName = DynamoDBHelper.GetDynamoDBTableName<OrderEntity>(),
+                TableName = typeof(OrderEntity).GetDynamoDBTableName(),
                 Key = new Dictionary<string, AttributeValue>
                 {
                     {nameof(OrderEntity.OwnerId), request.RequestingUserId.GetAttributeValue()},

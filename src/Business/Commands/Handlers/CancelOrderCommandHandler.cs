@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using AutoMapper;
-using Business.HelperMethods;
 using Business.Wrappers;
-using Conditus.DynamoDBMapper.Mappers;
+using Conditus.DynamoDB.MappingExtensions.Mappers;
+using Conditus.DynamoDB.QueryExtensions.Extensions;
 using Conditus.Trader.Domain.Entities;
 using Conditus.Trader.Domain.Enums;
 using Conditus.Trader.Domain.Models;
@@ -45,7 +45,7 @@ namespace Business.Commands.Handlers
         {
             var cancelRequest = new UpdateItemRequest
             {
-                TableName = DynamoDBHelper.GetDynamoDBTableName<OrderEntity>(),
+                TableName = typeof(OrderEntity).GetDynamoDBTableName(),
                 Key = new Dictionary<string, AttributeValue>
                 {
                     {nameof(OrderEntity.OwnerId), request.RequestingUserId.GetAttributeValue()},

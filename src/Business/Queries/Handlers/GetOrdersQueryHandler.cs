@@ -9,9 +9,10 @@ using Conditus.Trader.Domain.Models;
 using Amazon.DynamoDBv2.Model;
 using Conditus.Trader.Domain.Entities;
 using Amazon.DynamoDBv2;
-using Database.Indexes;
-using Conditus.DynamoDBMapper.Mappers;
-using Business.HelperMethods;
+using Conditus.DynamoDB.QueryExtensions.Pagination;
+using Conditus.DynamoDB.QueryExtensions.Extensions;
+using Conditus.DynamoDB.MappingExtensions.Mappers;
+using Conditus.Trader.Domain.Entities.LocalSecondaryIndexes;
 
 namespace Business.Queries.Handlers
 {
@@ -30,8 +31,9 @@ namespace Business.Queries.Handlers
         {
             if (request.CreatedFromDate == null)
                 request.CreatedFromDate = DateTime.UtcNow.AddYears(-10);
-
-            var paginatedQueryResponse = await QueryPaginatedAsync(request);
+            
+            var query = GetQueryRequest(request);
+            var paginatedQueryResponse = await QueryPaginatedAsync(query, request.PageSize);
             var orderOverviews = paginatedQueryResponse.Items
                 .Select(m => m.ToEntity<OrderEntity>())
                 .Select(_mapper.Map<OrderOverview>);
@@ -41,27 +43,43 @@ namespace Business.Queries.Handlers
             return BusinessResponse.Ok<IEnumerable<OrderOverview>>(orderOverviews, pagination);
         }
 
-        private async Task<QueryResponse> QueryPaginatedAsync(GetOrdersQuery request)
+        /// <summary>
+        /// QueryPaginatedAsync:
+        ///   - Because a QueryRequest with Limit and FilterExpression set may return less items than the limit,
+        ///     as the filter is done post query, this function ensures the response includes a full page worth of items
+        ///     or the rest of the items in the index.
+        ///   - To ensure the LastEvaluatedKey is the last key in the index that was returned,
+        ///     the function checks if the scanned count is bigger than the page size. If so the LastEvaluatedKey
+        ///     will be the key of the last map in the page maps. If not the LastEvaluatedKey of the last query response will be used.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns>
+        /// A QueryResponse with the following properties set:
+        ///     Items: Item maps (Dictionary<string, AttributeValue>)
+        ///     LastEvaluatedKey: The key of the last scanned item in the index within the limit (Dictionary<string, AttributeValue>)
+        ///     Count: The amount of items in the response (int)
+        ///     ScannedCount: The amount of items returned over all the queries (int)
+        /// </returns>
+        private async Task<QueryResponse> QueryPaginatedAsync(QueryRequest query, int pageSize)
         {
             QueryResponse queryResponse = null;
             List<Dictionary<string, AttributeValue>> orderMaps = new List<Dictionary<string, AttributeValue>>();
-            var query = GetQueryRequest(request);
 
             do
             {
                 queryResponse = await _db.QueryAsync(query);
                 orderMaps.AddRange(queryResponse.Items);
-                query.ExclusiveStartKey = queryResponse.LastEvaluatedKey;   
-            } while (queryResponse.LastEvaluatedKey.Count > 0 && orderMaps.Count < request.PageSize);
+                query.ExclusiveStartKey = queryResponse.LastEvaluatedKey;
+            } while (queryResponse.LastEvaluatedKey.Count > 0 && orderMaps.Count < pageSize);
 
-            var pageSize = orderMaps.Count > request.PageSize ? request.PageSize : orderMaps.Count;
-            var pageOrderMaps = orderMaps.GetRange(0, pageSize);
-
+            var isResultingItemsCountBiggerThanPageSize = orderMaps.Count > pageSize;
+            var resultPageSize = isResultingItemsCountBiggerThanPageSize ? pageSize : orderMaps.Count;
+            var pageOrderMaps = isResultingItemsCountBiggerThanPageSize ? orderMaps.GetRange(0, resultPageSize) : orderMaps;
             var paginatedQueryResponse = new QueryResponse
             {
                 Items = pageOrderMaps,
-                LastEvaluatedKey = queryResponse.LastEvaluatedKey,
-                Count = pageSize,
+                LastEvaluatedKey = isResultingItemsCountBiggerThanPageSize ? pageOrderMaps.Last() : queryResponse.LastEvaluatedKey,
+                Count = resultPageSize,
                 ScannedCount = orderMaps.Count
             };
 
@@ -70,7 +88,6 @@ namespace Business.Queries.Handlers
 
         private Pagination GetPaginationFromQueryResponse(QueryResponse queryResponse)
         {
-            
             string paginationToken = GetPaginationTokenFromQueryResponse(queryResponse);
 
             return new Pagination
@@ -80,13 +97,43 @@ namespace Business.Queries.Handlers
             };
         }
 
+        /// <summary>
+        /// GetPaginationTokenFromQueryResponse:
+        /// - The QueryResponse.LastEvaluatedKey may not be the same as the key of the last item in the QueryResponse.Items
+        ///   as the filter will have removed some of the items post query. Meaning if the table consists of:
+        ///   ╔═════════╤═══════╤═══════╗
+        ///   ║ OwnerId │ Name  │ Type  ║
+        ///   ║ [PK]    │ [SK]  │       ║
+        ///   ╠═════════╪═══════╪═══════╣
+        ///   ║ 1       │ Item1 │ Type1 ║
+        ///   ╟─────────┼───────┼───────╢
+        ///   ║ 1       │ Item2 │ Type2 ║
+        ///   ╟─────────┼───────┼───────╢
+        ///   ║ 1       │ Item3 │ Type1 ║
+        ///   ╟─────────┼───────┼───────╢
+        ///   ║ 1       │ Item4 │ Type2 ║
+        ///   ╚═════════╧═══════╧═══════╝
+        ///   
+        ///   Query (simplified):
+        ///     {
+        ///         Limit: 2,
+        ///         KeyConditionExpression: "OwnerId = 1 AND begins_with(Name, Item)",
+        ///         FilterExpression: "Type = Type1"
+        ///     }
+        ///   
+        ///   The expected result will be just Item1, the QueryResponse.ScannedCount to be 2 
+        ///   and the LastEvaluatedKey being the key of Item2. Why?
+        ///   Because next time the same query is run, the query shouldn't query Item2 again, it should start at Item3
+        /// </summary>
+        /// <param name="queryResponse">The query response of a query with Limit set, aka. a pagination query</param>
+        /// <returns>null or the pagination token of the LastEvaluatedKey</returns>
         private string GetPaginationTokenFromQueryResponse(QueryResponse queryResponse)
-        {
+        {   
             if (queryResponse.LastEvaluatedKey.Count == 0)
                 return null;
                 
-            var lastOrderMap = queryResponse.Items.Last();
-            var paginationToken = PaginationTokenHelper.GetTokenWithRangeKey<OrderEntity>(lastOrderMap);
+            var paginationToken = PaginationTokenConverter.GetToken<OrderEntity>(
+                queryResponse.LastEvaluatedKey);
 
             return paginationToken;
         }
@@ -115,13 +162,12 @@ namespace Business.Queries.Handlers
         {
             var query = new QueryRequest
             {
-                TableName = DynamoDBHelper.GetDynamoDBTableName<OrderEntity>(),
+                TableName = typeof(OrderEntity).GetDynamoDBTableName(),
                 Select = "ALL_ATTRIBUTES",
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
                     {V_CREATED_FROM_DATE, ((DateTime) request.CreatedFromDate).GetAttributeValue()}
-                },
-                Limit = request.PageSize
+                }
             };
 
             var index = GetOptimalOrderIndex(request);
@@ -142,16 +188,16 @@ namespace Business.Queries.Handlers
         public string GetOptimalOrderIndex(GetOrdersQuery request)
         {
             if (request.AssetSymbol != null)
-                return LocalIndexes.UserOrderAssetIndex;
+                return OrderLocalSecondaryIndexes.UserOrderAssetIndex;
 
             if (request.PortfolioId != null)
-                return LocalIndexes.UserOrderPortfolioIndex;
+                return OrderLocalSecondaryIndexes.UserOrderPortfolioIndex;
 
             if (request.Status != null)
-                return LocalIndexes.UserOrderStatusIndex;
+                return OrderLocalSecondaryIndexes.UserOrderStatusIndex;
 
             if (request.Type != null)
-                return LocalIndexes.UserOrderTypeIndex;
+                return OrderLocalSecondaryIndexes.UserOrderTypeIndex;
 
             return null;
         }
@@ -176,7 +222,7 @@ namespace Business.Queries.Handlers
             if (request.Type != null)
             {
                 AddIndexCondition(
-                    LocalIndexes.UserOrderTypeIndex,
+                    OrderLocalSecondaryIndexes.UserOrderTypeIndex,
                     query.IndexName,
                     $"{nameof(OrderEntity.OrderType)} = {V_TYPE}");
 
@@ -188,7 +234,7 @@ namespace Business.Queries.Handlers
             if (request.Status != null)
             {
                 AddIndexCondition(
-                    LocalIndexes.UserOrderStatusIndex,
+                    OrderLocalSecondaryIndexes.UserOrderStatusIndex,
                     query.IndexName,
                     $"{nameof(OrderEntity.OrderStatus)} = {V_STATUS}");
 
@@ -201,7 +247,7 @@ namespace Business.Queries.Handlers
             if (request.PortfolioId != null)
             {
                 AddIndexCondition(
-                    LocalIndexes.UserOrderPortfolioIndex,
+                    OrderLocalSecondaryIndexes.UserOrderPortfolioIndex,
                     query.IndexName,
                     $"{nameof(OrderEntity.PortfolioId)} = {V_PORTFOLIO_ID}");
 
@@ -213,7 +259,7 @@ namespace Business.Queries.Handlers
             if (request.AssetSymbol != null)
             {
                 AddIndexCondition(
-                    LocalIndexes.UserOrderAssetIndex,
+                    OrderLocalSecondaryIndexes.UserOrderAssetIndex,
                     query.IndexName,
                     $"{nameof(OrderEntity.AssetSymbol)} = {V_ASSET_SYMBOL}");
 
@@ -275,9 +321,20 @@ namespace Business.Queries.Handlers
         private void SetQueryPagination(GetOrdersQuery request, QueryRequest query)
         {
             query.Limit = request.PageSize;
+            query.ExclusiveStartKey = GetLastEvaluatedKey(request, query);
+        }
 
-            if (request.PaginationToken != null)
-                query.ExclusiveStartKey = PaginationTokenHelper.GetLastEvaluatedKeyWithRangeKey<OrderEntity>(request.PaginationToken);
+        private Dictionary<string, AttributeValue> GetLastEvaluatedKey(GetOrdersQuery request, QueryRequest query)
+        {
+            if (request.PaginationToken == null)
+                return new Dictionary<string, AttributeValue>();
+            
+            if (query.IndexName != null)
+                return PaginationTokenConverter.GetLastEvaluatedKeyFromTokenWithLocalSecondaryIndex<OrderEntity>(
+                    request.PaginationToken,
+                    query.IndexName);
+            
+            return PaginationTokenConverter.GetLastEvaluatedKeyFromToken<OrderEntity>(request.PaginationToken);
         }
     }
 }

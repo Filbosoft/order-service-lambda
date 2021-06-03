@@ -12,7 +12,7 @@ namespace Integration.Seeds.V1
         public static readonly PortfolioDetail USER_DKK_PORTFOLIO = new PortfolioDetail
         {
             Id = "10b20561-de35-4bf4-84ee-b1452d431bcd",
-            Name = "Testuser's portfolio",
+            Name = "Users portfolio",
             Capital = 10000M,
             Assets = new List<PortfolioAsset>
             {
@@ -20,11 +20,18 @@ namespace Integration.Seeds.V1
             },
             CurrencyCode = DKK.Code
         };
+        public static readonly PortfolioDetail PAGINATION_PORTFOLIO = new PortfolioDetail
+        {
+            Id = "ae54f603-6887-4fe7-8f37-ffad20ce8f17",
+            Name = "User portfolio for pagination tests",
+            Capital = 10000M,
+            CurrencyCode = DKK.Code
+        };
 
         public static readonly PortfolioDetail NONTESTUSER_PORTFOLIO = new PortfolioDetail
         {
             Id = "83c61b7a-df2f-43de-9272-a9f307dc4768",
-            Name = "Not Testuser's portfolio",
+            Name = "Not users portfolio",
             Capital = 10000M
         };
     }
