@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.0.26" />
+    <PackageReference Include="Conditus.Trader.Domain" Version="1.0.5" />
   </ItemGroup>
 
 </Project>

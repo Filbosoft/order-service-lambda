@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
-using Database.Indexes;
+using Conditus.Trader.Domain.Entities.LocalSecondaryIndexes;
 
 namespace Database.Migrations
 {
@@ -78,7 +78,7 @@ namespace Database.Migrations
                 {
                     new LocalSecondaryIndex
                     {
-                        IndexName = LocalIndexes.UserOrderIdIndex,
+                        IndexName = OrderLocalSecondaryIndexes.UserOrderIdIndex,
                         KeySchema = new List<KeySchemaElement>
                         {
                             partitionKey,
@@ -92,7 +92,7 @@ namespace Database.Migrations
                     },
                     new LocalSecondaryIndex
                     {
-                        IndexName = LocalIndexes.UserOrderStatusIndex,
+                        IndexName = OrderLocalSecondaryIndexes.UserOrderStatusIndex,
                         KeySchema = new List<KeySchemaElement>
                         {
                             partitionKey,
@@ -106,7 +106,7 @@ namespace Database.Migrations
                     },
                     new LocalSecondaryIndex
                     {
-                        IndexName = LocalIndexes.UserOrderTypeIndex,
+                        IndexName = OrderLocalSecondaryIndexes.UserOrderTypeIndex,
                         KeySchema = new List<KeySchemaElement>
                         {
                             partitionKey,
@@ -120,7 +120,7 @@ namespace Database.Migrations
                     },
                     new LocalSecondaryIndex
                     {
-                        IndexName = LocalIndexes.UserOrderAssetIndex,
+                        IndexName = OrderLocalSecondaryIndexes.UserOrderAssetIndex,
                         KeySchema = new List<KeySchemaElement>
                         {
                             partitionKey,
@@ -134,7 +134,7 @@ namespace Database.Migrations
                     },
                     new LocalSecondaryIndex
                     {
-                        IndexName = LocalIndexes.UserOrderPortfolioIndex,
+                        IndexName = OrderLocalSecondaryIndexes.UserOrderPortfolioIndex,
                         KeySchema = new List<KeySchemaElement>
                         {
                             partitionKey,
@@ -151,7 +151,7 @@ namespace Database.Migrations
                 {
                     new GlobalSecondaryIndex
                     {
-                        IndexName = GlobalIndexes.OrderStatusIndex,
+                        IndexName = OrderGlobalSecondaryIndexes.OrderStatusIndex,
                         KeySchema = new List<KeySchemaElement>
                         {
                             new KeySchemaElement
