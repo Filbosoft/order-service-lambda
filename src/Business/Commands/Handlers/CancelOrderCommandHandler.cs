@@ -8,6 +8,7 @@ using Business.Wrappers;
 using Conditus.DynamoDB.MappingExtensions.Mappers;
 using Conditus.DynamoDB.QueryExtensions.Extensions;
 using Conditus.Trader.Domain.Entities;
+using Conditus.Trader.Domain.Entities.LocalSecondaryIndexes;
 using Conditus.Trader.Domain.Enums;
 using Conditus.Trader.Domain.Models;
 
@@ -28,7 +29,12 @@ namespace Business.Commands.Handlers
 
         public async Task<BusinessResponse<OrderDetail>> Handle(CancelOrderCommand request, CancellationToken cancellationToken)
         {
-            var cancelRequest = GetCancelRequest(request);
+            var entity = await _db.LoadByLocalSecondaryIndexAsync<OrderEntity>(
+                request.RequestingUserId.GetAttributeValue(),
+                request.OrderId.GetAttributeValue(),
+                OrderLocalSecondaryIndexes.UserOrderIdIndex);
+            
+            var cancelRequest = GetCancelRequest(request, entity);
             var response = await _db.UpdateItemAsync(cancelRequest);
             var updatedEntity = response.Attributes.ToEntity<OrderEntity>();
             var orderDetail = _mapper.Map<OrderDetail>(updatedEntity);
@@ -41,8 +47,10 @@ namespace Business.Commands.Handlers
         ***/
         private const string V_NEW_STATUS = ":v_new_status";
 
-        public UpdateItemRequest GetCancelRequest(CancelOrderCommand request)
+        public UpdateItemRequest GetCancelRequest(CancelOrderCommand request, OrderEntity entity)
         {
+            entity.OrderStatus = OrderStatus.Cancelled;
+
             var cancelRequest = new UpdateItemRequest
             {
                 TableName = typeof(OrderEntity).GetDynamoDBTableName(),
@@ -54,7 +62,7 @@ namespace Business.Commands.Handlers
                 UpdateExpression = $"SET {nameof(OrderEntity.OrderStatus)} = {V_NEW_STATUS}",
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
-                    {V_NEW_STATUS, OrderStatus.Cancelled.GetAttributeValue()}
+                    {V_NEW_STATUS, SelfContainingCompositeKeyMapper.GetSelfContainingCompositeKeyAttributeValue(entity, nameof(entity.OrderStatus))}
                 },
                 ReturnValues = "ALL_NEW"
             };

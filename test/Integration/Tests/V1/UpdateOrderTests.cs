@@ -5,7 +5,6 @@ using Api;
 using System.Net.Http;
 using Conditus.Trader.Domain.Models;
 using Conditus.Trader.Domain.Enums;
-using Amazon.DynamoDBv2.DataModel;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Integration.Utilities;
@@ -13,6 +12,12 @@ using Business.Commands;
 using Conditus.Trader.Domain.Entities;
 using Api.Responses.V1;
 using Microsoft.AspNetCore.Mvc;
+using Amazon.DynamoDBv2;
+using System.Linq;
+using Amazon.DynamoDBv2.Model;
+using Conditus.DynamoDB.MappingExtensions.Mappers;
+using Conditus.DynamoDB.QueryExtensions.Extensions;
+using Conditus.Trader.Domain.Entities.LocalSecondaryIndexes;
 
 using static Integration.Tests.V1.TestConstants;
 using static Integration.Seeds.V1.OrderSeeds;
@@ -22,20 +27,18 @@ namespace Integration.Tests.V1
     public class UpdateOrderTests : IClassFixture<CustomWebApplicationFactory<Startup>>, IDisposable
     {
         private readonly HttpClient _client;
-        private readonly IDynamoDBContext _dbContext;
+        private readonly IAmazonDynamoDB _db;
 
         public UpdateOrderTests(CustomWebApplicationFactory<Startup> factory)
         {
             _client = factory.CreateAuthorizedClient();
-            _dbContext = factory.GetDynamoDBContext();
-
-            Setup();
+            _db = factory.GetDynamoDB();
         }
 
         public void Dispose()
         {
             _client.Dispose();
-            _dbContext.Dispose();
+            _db.Dispose();
         }
 
         public async void Setup()
@@ -47,20 +50,34 @@ namespace Integration.Tests.V1
                 CANCELLED_BUY_ORDER
             };
 
-            var batchWrite = _dbContext.CreateBatchWrite<OrderEntity>();
-            batchWrite.AddPutItems(seedOrders);
+            var writeRequests = seedOrders
+                .Select(o => new PutRequest { Item = o.GetAttributeValueMap() })
+                .Select(p => new WriteRequest { PutRequest = p })
+                .ToList();
 
-            await batchWrite.ExecuteAsync();
+            var batchWriteRequest = new BatchWriteItemRequest
+            {
+                RequestItems = new Dictionary<string, List<WriteRequest>>
+                {
+                    { typeof(OrderEntity).GetDynamoDBTableName(), writeRequests }
+                }
+            };
+
+            await _db.BatchWriteItemAsync(batchWriteRequest);
+        }
+
+        public async void SeedOrder(OrderEntity seedOrder)
+        {
+            await _db.PutItemAsync(typeof(OrderEntity).GetDynamoDBTableName(), seedOrder.GetAttributeValueMap());
         }
 
         [Theory]
-        [InlineData(EXPIRES_BUY_ORDER_ID)]
-        [InlineData(COMPLETED_BUY_ORDER_ID)]
-        [InlineData(CANCELLED_BUY_ORDER_ID)]
-        public async void UpdateOrder_WhereOrderIsNotActive_ShouldReturnBadRequest(string orderId)
+        [MemberData(nameof(NonActiveOrders))]
+        public async void UpdateOrder_WhereOrderIsNotActive_ShouldReturnBadRequest(OrderEntity nonActiveOrder)
         {
             //Given
-            var uri = $"{BASE_URL}/{orderId}";
+            SeedOrder(nonActiveOrder);
+            var uri = $"{BASE_URL}/{nonActiveOrder.Id}";
             var orderUpdater = new UpdateOrderCommand
             {
                 Price = 100.1M
@@ -76,11 +93,21 @@ namespace Integration.Tests.V1
             problem.Title.Should().Be(UpdateOrderResponseCodes.OrderNotActive.ToString());
         }
 
+        public static IEnumerable<object[]> NonActiveOrders 
+        {
+            get
+            {
+                yield return new object[] {EXPIRED_BUY_ORDER};
+                yield return new object[] {COMPLETED_BUY_ORDER};
+                yield return new object[] {CANCELLED_BUY_ORDER};
+            }
+        }
+
         [Fact]
         public async void UpdateOrder_WithValidPrice_ShouldReturnAcceptedAndTheUpdatedOrder()
         {
             //Given
-            await _dbContext.SaveAsync<OrderEntity>(ACTIVE_BUY_ORDER);
+            SeedOrder(ACTIVE_BUY_ORDER);
             var uri = $"{BASE_URL}/{ACTIVE_BUY_ORDER.Id}";
             var orderUpdater = new UpdateOrderCommand
             {
@@ -101,7 +128,10 @@ namespace Integration.Tests.V1
                     .ExcludingMissingMembers());
             updatedOrder.Price.Should().Be(orderUpdater.Price);
 
-            var dbOrder = await _dbContext.LoadAsync<OrderEntity>(TESTUSER_ID, updatedOrder.CreatedAt);
+            var dbOrder = await _db.LoadByLocalSecondaryIndexAsync<OrderEntity>(
+                TESTUSER_ID.GetAttributeValue(),
+                updatedOrder.Id.GetAttributeValue(),
+                OrderLocalSecondaryIndexes.UserOrderIdIndex);
 
             dbOrder.Should().NotBeNull()
                 .And.BeEquivalentTo(ACTIVE_BUY_ORDER, options => options
@@ -114,7 +144,7 @@ namespace Integration.Tests.V1
         public async void UpdateOrder_WithExpiresAt_ShouldReturnAcceptedAndTheUpdatedOrder()
         {
             //Given
-            await _dbContext.SaveAsync<OrderEntity>(ACTIVE_BUY_ORDER);
+            SeedOrder(ACTIVE_BUY_ORDER);
             var uri = $"{BASE_URL}/{ACTIVE_BUY_ORDER.Id}";
             var orderUpdater = new UpdateOrderCommand
             {
@@ -135,7 +165,10 @@ namespace Integration.Tests.V1
                     .ExcludingMissingMembers());
             updatedOrder.ExpiresAt.Should().BeCloseTo((DateTime)orderUpdater.ExpiresAt, 60000);
 
-            var dbOrder = await _dbContext.LoadAsync<OrderEntity>(TESTUSER_ID, updatedOrder.CreatedAt);
+            var dbOrder = await _db.LoadByLocalSecondaryIndexAsync<OrderEntity>(
+                TESTUSER_ID.GetAttributeValue(),
+                updatedOrder.Id.GetAttributeValue(),
+                OrderLocalSecondaryIndexes.UserOrderIdIndex);
 
             dbOrder.Should().NotBeNull()
                 .And.BeEquivalentTo(ACTIVE_BUY_ORDER, options => options
@@ -148,7 +181,7 @@ namespace Integration.Tests.V1
         public async void UpdateOrder_WithCancel_ShouldReturnAcceptedAndTheUpdatedOrder()
         {
             //Given
-            await _dbContext.SaveAsync<OrderEntity>(ACTIVE_BUY_ORDER);
+            SeedOrder(ACTIVE_BUY_ORDER);
             var uri = $"{BASE_URL}/{ACTIVE_BUY_ORDER.Id}";
             var orderUpdater = new UpdateOrderCommand
             {
@@ -169,7 +202,10 @@ namespace Integration.Tests.V1
                     .ExcludingMissingMembers());
             updatedOrder.Status.Should().Be(OrderStatus.Cancelled);
 
-            var dbOrder = await _dbContext.LoadAsync<OrderEntity>(TESTUSER_ID, updatedOrder.CreatedAt);
+            var dbOrder = await _db.LoadByLocalSecondaryIndexAsync<OrderEntity>(
+                TESTUSER_ID.GetAttributeValue(),
+                updatedOrder.Id.GetAttributeValue(),
+                OrderLocalSecondaryIndexes.UserOrderIdIndex);
 
             dbOrder.Should().NotBeNull()
                 .And.BeEquivalentTo(ACTIVE_BUY_ORDER, options => options
@@ -182,7 +218,7 @@ namespace Integration.Tests.V1
         public async void UpdateOrder_WithNonUserOrderId_ShouldReturnNotFound()
         {
             //Given
-            await _dbContext.SaveAsync<OrderEntity>(ACTIVE_NONUSER_ORDER);
+            SeedOrder(ACTIVE_NONUSER_ORDER);
             var uri = $"{BASE_URL}/{ACTIVE_NONUSER_ORDER.Id}";
             var orderUpdater = new UpdateOrderCommand
             {
