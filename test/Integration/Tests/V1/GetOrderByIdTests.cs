@@ -3,12 +3,14 @@ using Xunit;
 using Api;
 using System.Net.Http;
 using Conditus.Trader.Domain.Models;
-using Amazon.DynamoDBv2.DataModel;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Integration.Utilities;
 using Conditus.Trader.Domain.Entities;
 using Api.Responses.V1;
+using Amazon.DynamoDBv2;
+using Conditus.DynamoDB.QueryExtensions.Extensions;
+using Conditus.DynamoDB.MappingExtensions.Mappers;
 
 using static Integration.Tests.V1.TestConstants;
 using static Integration.Seeds.V1.OrderSeeds;
@@ -18,27 +20,30 @@ namespace Integration.Tests.V1
     public class GetOrderByIdTests : IClassFixture<CustomWebApplicationFactory<Startup>>, IDisposable
     {
         private readonly HttpClient _client;
-        private readonly IDynamoDBContext _dbContext;
-        public CustomWebApplicationFactory<Startup> _factory;
+        private readonly IAmazonDynamoDB _db;
 
         public GetOrderByIdTests(CustomWebApplicationFactory<Startup> factory)
         {
-            _factory = factory;
             _client = factory.CreateAuthorizedClient();
-            _dbContext = factory.GetDynamoDBContext();
+            _db = factory.GetDynamoDB();
         }
 
         public void Dispose()
         {
             _client.Dispose();
-            _dbContext.Dispose();
+            _db.Dispose();
+        }
+
+        public async void SeedOrder(OrderEntity seedOrder)
+        {
+            await _db.PutItemAsync(typeof(OrderEntity).GetDynamoDBTableName(), seedOrder.GetAttributeValueMap());
         }
 
         [Fact]
         public async void GetOrderById_WithValidId_ShouldReturnSeededOrder()
         {
             //Given
-            await _dbContext.SaveAsync<OrderEntity>(ACTIVE_BUY_ORDER);
+            SeedOrder(ACTIVE_BUY_ORDER);
             var uri = $"{BASE_URL}/{ACTIVE_BUY_ORDER.Id}";
 
             //When
@@ -71,7 +76,7 @@ namespace Integration.Tests.V1
         public async void GetOrderById_WithOrderNotBelongingToUser_ShouldReturnNotFound()
         {
             //Given
-            await _dbContext.SaveAsync<OrderEntity>(COMPLETED_NONUSER_ORDER);
+            SeedOrder(COMPLETED_NONUSER_ORDER);
             var uri = $"{BASE_URL}/{COMPLETED_NONUSER_ORDER.Id}";
 
             //When

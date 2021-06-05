@@ -41,31 +41,6 @@ namespace Integration.Tests.V1
             _db.Dispose();
         }
 
-        public async void Setup()
-        {
-            var seedOrders = new List<OrderEntity>
-            {
-                COMPLETED_BUY_ORDER,
-                EXPIRED_BUY_ORDER,
-                CANCELLED_BUY_ORDER
-            };
-
-            var writeRequests = seedOrders
-                .Select(o => new PutRequest { Item = o.GetAttributeValueMap() })
-                .Select(p => new WriteRequest { PutRequest = p })
-                .ToList();
-
-            var batchWriteRequest = new BatchWriteItemRequest
-            {
-                RequestItems = new Dictionary<string, List<WriteRequest>>
-                {
-                    { typeof(OrderEntity).GetDynamoDBTableName(), writeRequests }
-                }
-            };
-
-            await _db.BatchWriteItemAsync(batchWriteRequest);
-        }
-
         public async void SeedOrder(OrderEntity seedOrder)
         {
             await _db.PutItemAsync(typeof(OrderEntity).GetDynamoDBTableName(), seedOrder.GetAttributeValueMap());

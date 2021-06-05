@@ -1,11 +1,8 @@
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
 using Business.Wrappers;
-using System.Linq;
 using Conditus.Trader.Domain.Models;
-using Amazon.DynamoDBv2.Model;
 using Conditus.Trader.Domain.Entities;
 using Amazon.DynamoDBv2;
 using Conditus.DynamoDB.QueryExtensions.Extensions;
@@ -32,30 +29,17 @@ namespace Business.Queries.Handlers
         private const string V_REQUESTING_USER_ID = ":v_requesting_user_id";
         public async Task<BusinessResponse<OrderDetail>> Handle(GetOrderByIdQuery request, CancellationToken cancellationToken)
         {
-            var query = new QueryRequest
-            {
-                TableName = typeof(OrderEntity).GetDynamoDBTableName(),
-                Select = "ALL_ATTRIBUTES",
-                IndexName = OrderLocalSecondaryIndexes.UserOrderIdIndex,
-                KeyConditionExpression = $"{nameof(OrderEntity.OwnerId)} = {V_REQUESTING_USER_ID} AND {nameof(OrderEntity.Id)} = {V_ORDER_ID}",
-                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
-                {
-                    {V_REQUESTING_USER_ID, new AttributeValue{S = request.RequestingUserId}},
-                    {V_ORDER_ID, new AttributeValue{S = request.OrderId}}
-                }
-            };
-
-            var response = await _db.QueryAsync(query);
-            var orderEntity = response.Items
-                .Select(i => i.ToEntity<OrderEntity>())
-                .FirstOrDefault();
+            var entity = await _db.LoadByLocalSecondaryIndexAsync<OrderEntity>(
+                request.RequestingUserId.GetAttributeValue(),
+                request.OrderId.GetAttributeValue(),
+                OrderLocalSecondaryIndexes.UserOrderIdIndex);
             
-            if (orderEntity == null)
+            if (entity == null)
                 return BusinessResponse.Fail<OrderDetail>(
                     GetOrderByIdResponseCodes.OrderNotFound,
                     $"No order with the id of {request.OrderId} was found");
 
-            var orderDetail = _mapper.Map<OrderDetail>(orderEntity);
+            var orderDetail = _mapper.Map<OrderDetail>(entity);
 
             return BusinessResponse.Ok<OrderDetail>(orderDetail);
         }
