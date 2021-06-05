@@ -13,6 +13,7 @@ using Conditus.DynamoDB.QueryExtensions.Pagination;
 using Conditus.DynamoDB.QueryExtensions.Extensions;
 using Conditus.DynamoDB.MappingExtensions.Mappers;
 using Conditus.Trader.Domain.Entities.LocalSecondaryIndexes;
+using Conditus.DynamoDB.MappingExtensions.Constants;
 
 namespace Business.Queries.Handlers
 {
@@ -27,10 +28,12 @@ namespace Business.Queries.Handlers
             _mapper = mapper;
         }
 
+        private const int DEFAULT_MONTHS_AMOUNT = -1; //Negative to show it's one month backwards
+
         public async Task<BusinessResponse<IEnumerable<OrderOverview>>> Handle(GetOrdersQuery request, CancellationToken cancellationToken)
         {
             if (request.CreatedFromDate == null)
-                request.CreatedFromDate = DateTime.UtcNow.AddYears(-10);
+                request.CreatedFromDate = GetDefaultCreatedFromDate(request);
             
             var query = GetQueryRequest(request);
             var paginatedQueryResponse = await QueryPaginatedAsync(query, request.PageSize);
@@ -41,6 +44,22 @@ namespace Business.Queries.Handlers
             var pagination = GetPaginationFromQueryResponse(paginatedQueryResponse);
 
             return BusinessResponse.Ok<IEnumerable<OrderOverview>>(orderOverviews, pagination);
+        }
+
+        private DateTime GetDefaultCreatedFromDate(GetOrdersQuery request)
+        {
+            if (request.CreatedToDate != null)
+                return ((DateTime)request.CreatedToDate).AddMonths(DEFAULT_MONTHS_AMOUNT);
+
+            if (request.CompletedFromDate != null)
+                return ((DateTime) request.CompletedFromDate).AddDays(-1);
+
+            if (request.CompletedToDate != null)
+                return ((DateTime) request.CompletedToDate)
+                    .AddMonths(DEFAULT_MONTHS_AMOUNT)
+                    .AddDays(-1);
+            
+            return DateTime.UtcNow.AddMonths(DEFAULT_MONTHS_AMOUNT);
         }
 
         /// <summary>
@@ -224,11 +243,11 @@ namespace Business.Queries.Handlers
                 AddIndexCondition(
                     OrderLocalSecondaryIndexes.UserOrderTypeIndex,
                     query.IndexName,
-                    $"{nameof(OrderEntity.OrderType)} = {V_TYPE}");
+                    $"begins_with({nameof(OrderEntity.OrderType)}, {V_TYPE})");
 
                 query.ExpressionAttributeValues.Add(
                     V_TYPE,
-                    request.Type.GetAttributeValue());
+                    request.Type.GetSelfContainingCompositeKeyQueryAttributeValue());
             }
 
             if (request.Status != null)
@@ -236,11 +255,11 @@ namespace Business.Queries.Handlers
                 AddIndexCondition(
                     OrderLocalSecondaryIndexes.UserOrderStatusIndex,
                     query.IndexName,
-                    $"{nameof(OrderEntity.OrderStatus)} = {V_STATUS}");
+                    $"begins_with({nameof(OrderEntity.OrderStatus)}, {V_STATUS})");
 
                 query.ExpressionAttributeValues.Add(
                     V_STATUS,
-                    request.Status.GetAttributeValue());
+                    request.Status.GetSelfContainingCompositeKeyQueryAttributeValue());
 
             }
 
@@ -249,11 +268,11 @@ namespace Business.Queries.Handlers
                 AddIndexCondition(
                     OrderLocalSecondaryIndexes.UserOrderPortfolioIndex,
                     query.IndexName,
-                    $"{nameof(OrderEntity.PortfolioId)} = {V_PORTFOLIO_ID}");
+                    $"begins_with({nameof(OrderEntity.PortfolioId)}, {V_PORTFOLIO_ID})");
 
                 query.ExpressionAttributeValues.Add(
                     V_PORTFOLIO_ID,
-                    new AttributeValue { S = request.PortfolioId });
+                    request.PortfolioId.GetSelfContainingCompositeKeyQueryAttributeValue());
             }
 
             if (request.AssetSymbol != null)
@@ -261,11 +280,11 @@ namespace Business.Queries.Handlers
                 AddIndexCondition(
                     OrderLocalSecondaryIndexes.UserOrderAssetIndex,
                     query.IndexName,
-                    $"{nameof(OrderEntity.AssetSymbol)} = {V_ASSET_SYMBOL}");
+                    $"begins_with ({nameof(OrderEntity.AssetSymbol)}, {V_ASSET_SYMBOL})");
 
                 query.ExpressionAttributeValues.Add(
                     V_ASSET_SYMBOL,
-                    new AttributeValue { S = request.AssetSymbol });
+                    request.AssetSymbol.GetSelfContainingCompositeKeyQueryAttributeValue());
             }
 
             if (request.AssetType != null)

@@ -163,7 +163,7 @@ namespace Integration.Seeds.V1
             Id = "ce6ac2d2-f42a-4df0-8953-ae2be90f8c8d",
             OwnerId = TESTUSER_ID,
             PortfolioId = USER_DKK_PORTFOLIO.Id,
-            AssetSymbol = "NonExistingAsset",
+            AssetSymbol = DKK_STOCK.Symbol,
             AssetType = AssetType.Stock,
             OrderType = OrderType.Buy,
             OrderStatus = OrderStatus.Completed,

@@ -13,12 +13,15 @@ using Conditus.Trader.Domain.Entities;
 using Api.Responses.V1;
 using Conditus.DynamoDB.QueryExtensions.Pagination;
 using Amazon.DynamoDBv2.Model;
+using Conditus.DynamoDB.MappingExtensions.Mappers;
+using Amazon.DynamoDBv2;
+using System.Linq;
+using Conditus.DynamoDB.QueryExtensions.Extensions;
 
 using static Integration.Tests.V1.TestConstants;
 using static Integration.Seeds.V1.OrderSeeds;
 using static Integration.Seeds.V1.PortfolioSeeds;
 using static Integration.Seeds.V1.AssetSeeds;
-using Conditus.DynamoDB.MappingExtensions.Mappers;
 
 namespace Integration.Tests.V1
 {
@@ -26,10 +29,12 @@ namespace Integration.Tests.V1
     {
         private readonly HttpClient _client;
         private readonly IDynamoDBContext _dbContext;
+        private readonly IAmazonDynamoDB _db;
 
         public GetOrdersPaginationTests(CustomWebApplicationFactory<Startup> factory)
         {
             _client = factory.CreateAuthorizedClient();
+            _db = factory.GetDynamoDB();
             _dbContext = factory.GetDynamoDBContext();
 
             Seed();
@@ -53,10 +58,20 @@ namespace Integration.Tests.V1
                 PAGINATION_SELL_ORDER3
             };
 
-            var batchWrite = _dbContext.CreateBatchWrite<OrderEntity>();
-            batchWrite.AddPutItems(seedOrders);
+            var writeRequests = seedOrders
+                .Select(o => new PutRequest{ Item = o.GetAttributeValueMap()})
+                .Select(p => new WriteRequest{ PutRequest = p})
+                .ToList();
+            
+            var batchWriteRequest = new BatchWriteItemRequest
+            {
+                RequestItems = new Dictionary<string, List<WriteRequest>>
+                {
+                    { typeof(OrderEntity).GetDynamoDBTableName(), writeRequests }
+                }
+            };
 
-            await batchWrite.ExecuteAsync();
+            await _db.BatchWriteItemAsync(batchWriteRequest);
         }
 
         [Fact]
@@ -88,17 +103,15 @@ namespace Integration.Tests.V1
         public async void GetOrders_WithPaginationToken_ShouldReturnUserOrdersPaginatedByTheProvidedToken()
         {
             //Given
-            var orderAttributeValueMap = PAGINATION_BUY_ORDER1.GetAttributeValueMap();
             var lastEvaluatedKey = new Dictionary<string, AttributeValue>
             {
                 {nameof(OrderEntity.OwnerId), PAGINATION_BUY_ORDER1.OwnerId.GetAttributeValue()},
                 {nameof(OrderEntity.CreatedAt), PAGINATION_BUY_ORDER1.CreatedAt.GetAttributeValue()},
-                {nameof(OrderEntity.PortfolioId), PAGINATION_BUY_ORDER1.PortfolioId.GetAttributeValue()}
+                {nameof(OrderEntity.PortfolioId), SelfContainingCompositeKeyMapper.GetSelfContainingCompositeKeyAttributeValue(PAGINATION_BUY_ORDER1, nameof(PAGINATION_BUY_ORDER1.PortfolioId))}
             };
             var paginationToken = PaginationTokenConverter.GetToken<OrderEntity>(lastEvaluatedKey);
             var pageSize = 2;
-            var query = $"pageSize={pageSize}&paginationToken={paginationToken}"
-                + $"&portfolioId={PAGINATION_BUY_ORDER1.PortfolioId}&type={PAGINATION_BUY_ORDER1.OrderType}";
+            var query = $"pageSize={pageSize}&portfolioId={PAGINATION_BUY_ORDER1.PortfolioId}&type={PAGINATION_BUY_ORDER1.OrderType}&paginationToken={paginationToken}";
             var uri = $"{BASE_URL}?{query}";
 
             //When
@@ -109,10 +122,11 @@ namespace Integration.Tests.V1
             var apiResponse = await httpResponse.GetDeserializedResponseBodyAsync<PagedApiResponse<IEnumerable<OrderOverview>>>();
             var orders = apiResponse.Data;
 
-            orders.Should().NotBeNullOrEmpty();
-
-            apiResponse.Pagination.Should().NotBeNull();
-            apiResponse.Pagination.PaginationToken.Should().NotBeNullOrEmpty();
+            orders.Should().NotBeNullOrEmpty()
+                .And.NotContain(o => o.Id.Equals(PAGINATION_BUY_ORDER1.Id))
+                .And.Contain(o => o.Id.Equals(PAGINATION_BUY_ORDER2.Id))
+                .And.Contain(o => o.Id.Equals(PAGINATION_BUY_ORDER3.Id));
+            
         }
     }
 }

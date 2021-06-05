@@ -11,14 +11,16 @@ using Microsoft.AspNetCore.Http;
 using Integration.Utilities;
 using Conditus.Trader.Domain.Entities;
 using Api.Responses.V1;
-using Conditus.DynamoDB.QueryExtensions.Pagination;
+using Conditus.DynamoDB.MappingExtensions.Mappers;
+using Amazon.DynamoDBv2.Model;
+using Amazon.DynamoDBv2;
+using System.Linq;
+using Conditus.DynamoDB.QueryExtensions.Extensions;
 
 using static Integration.Tests.V1.TestConstants;
 using static Integration.Seeds.V1.OrderSeeds;
 using static Integration.Seeds.V1.PortfolioSeeds;
 using static Integration.Seeds.V1.AssetSeeds;
-using Conditus.DynamoDB.MappingExtensions.Mappers;
-using Amazon.DynamoDBv2.Model;
 
 namespace Integration.Tests.V1
 {
@@ -26,12 +28,12 @@ namespace Integration.Tests.V1
     {
         private readonly HttpClient _client;
         private readonly IDynamoDBContext _dbContext;
-        public CustomWebApplicationFactory<Startup> _factory;
+        private readonly IAmazonDynamoDB _db;
 
         public GetOrdersTests(CustomWebApplicationFactory<Startup> factory)
         {
-            _factory = factory;
             _client = factory.CreateAuthorizedClient();
+            _db = factory.GetDynamoDB();
             _dbContext = factory.GetDynamoDBContext();
 
             Seed();
@@ -59,10 +61,20 @@ namespace Integration.Tests.V1
                 ORDER_COMPLETED_TODAY
             };
 
-            var batchWrite = _dbContext.CreateBatchWrite<OrderEntity>();
-            batchWrite.AddPutItems(seedOrders);
+            var writeRequests = seedOrders
+                .Select(o => new PutRequest{ Item = o.GetAttributeValueMap()})
+                .Select(p => new WriteRequest{ PutRequest = p})
+                .ToList();
+            
+            var batchWriteRequest = new BatchWriteItemRequest
+            {
+                RequestItems = new Dictionary<string, List<WriteRequest>>
+                {
+                    { typeof(OrderEntity).GetDynamoDBTableName(), writeRequests }
+                }
+            };
 
-            await batchWrite.ExecuteAsync();
+            await _db.BatchWriteItemAsync(batchWriteRequest);
         }
 
         [Fact]
@@ -118,9 +130,10 @@ namespace Integration.Tests.V1
         }
 
         [Fact]
-        public async void GetOrders_WithAssetId_ShouldReturnUserOrdersFilteredByAssetId()
+        public async void GetOrders_WithAssetSymbol_ShouldReturnUserOrdersFilteredByAssetId()
         {
             //Given
+            var assetSymbol = ORDER_COMPLETED_TODAY.AssetSymbol;
             var query = $"assetSymbol={DKK_STOCK.Symbol}";
             var uri = $"{BASE_URL}?{query}";
 
@@ -250,58 +263,6 @@ namespace Integration.Tests.V1
 
             orders.Should().NotBeNullOrEmpty()
                 .And.OnlyContain(o => o.CompletedAt <= completedToDate);
-        }
-
-        [Fact]
-        public async void GetOrders_WithPageSize_ShouldReturnSpecifiedPageSizeUserOrdersWithPagination()
-        {
-            //Given
-            var pageSize = 2; //More than 2 user orders should be seeded;
-            var query = $"pageSize={pageSize}";
-            var uri = $"{BASE_URL}?{query}";
-
-            //When
-            var httpResponse = await _client.GetAsync(uri);
-
-            //Then
-            httpResponse.EnsureSuccessStatusCode();
-            var apiResponse = await httpResponse.GetDeserializedResponseBodyAsync<PagedApiResponse<IEnumerable<OrderOverview>>>();
-            var orders = apiResponse.Data;
-
-            orders.Should().NotBeNullOrEmpty()
-                .And.HaveCountLessOrEqualTo(pageSize);
-            
-            apiResponse.Pagination.Should().NotBeNull();
-            apiResponse.Pagination.PageSize.Should().BeLessOrEqualTo(pageSize);
-            apiResponse.Pagination.PaginationToken.Should().NotBeNullOrEmpty();
-        }
-
-        [Fact]
-        public async void GetOrders_WithPaginationToken_ShouldReturnUserOrdersPaginatedByTheProvidedToken()
-        {
-            //Given
-            var orderAttributeValueMap = ACTIVE_BUY_ORDER.GetAttributeValueMap();
-            var lastEvaluatedKey = new Dictionary<string, AttributeValue>
-            {
-                {nameof(OrderEntity.OwnerId), ACTIVE_BUY_ORDER.OwnerId.GetAttributeValue()},
-                {nameof(OrderEntity.CreatedAt), ACTIVE_BUY_ORDER.CreatedAt.GetAttributeValue()}
-            };
-            var paginationToken = PaginationTokenConverter.GetToken<OrderEntity>(lastEvaluatedKey);
-            var query = $"paginationToken={paginationToken}";
-            var uri = $"{BASE_URL}?{query}";
-
-            //When
-            var httpResponse = await _client.GetAsync(uri);
-
-            //Then
-            httpResponse.EnsureSuccessStatusCode();
-            var apiResponse = await httpResponse.GetDeserializedResponseBodyAsync<PagedApiResponse<IEnumerable<OrderOverview>>>();
-            var orders = apiResponse.Data;
-
-            orders.Should().NotBeNullOrEmpty();
-            
-            apiResponse.Pagination.Should().NotBeNull();
-            apiResponse.Pagination.PaginationToken.Should().NotBeNullOrEmpty();
         }
     }
 }

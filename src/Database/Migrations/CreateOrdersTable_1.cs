@@ -47,12 +47,12 @@ namespace Database.Migrations
                     new AttributeDefinition
                     {
                         AttributeName = "OrderStatus",
-                        AttributeType = ScalarAttributeType.N
+                        AttributeType = ScalarAttributeType.S
                     },
                     new AttributeDefinition
                     {
                         AttributeName = "OrderType",
-                        AttributeType = ScalarAttributeType.N
+                        AttributeType = ScalarAttributeType.S
                     },
                     new AttributeDefinition
                     {
