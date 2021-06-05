@@ -6,7 +6,6 @@ using Api;
 using System.Net.Http;
 using Conditus.Trader.Domain.Models;
 using Conditus.Trader.Domain.Enums;
-using Amazon.DynamoDBv2.DataModel;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Integration.Utilities;
@@ -15,6 +14,10 @@ using FluentAssertions.Execution;
 using Conditus.Trader.Domain.Entities;
 using Api.Responses.V1;
 using Microsoft.AspNetCore.Mvc;
+using Amazon.DynamoDBv2;
+using Conditus.DynamoDB.QueryExtensions.Extensions;
+using Conditus.DynamoDB.MappingExtensions.Mappers;
+using Conditus.Trader.Domain.Entities.LocalSecondaryIndexes;
 
 using static Integration.Tests.V1.TestConstants;
 using static Integration.Seeds.V1.AssetSeeds;
@@ -26,18 +29,18 @@ namespace Integration.Tests.V1
     public class CreateOrderTests : IClassFixture<CustomWebApplicationFactory<Startup>>, IDisposable
     {
         private readonly HttpClient _client;
-        private readonly IDynamoDBContext _dbContext;
+        private readonly IAmazonDynamoDB _db;
 
         public CreateOrderTests(CustomWebApplicationFactory<Startup> factory)
         {
             _client = factory.CreateAuthorizedClient();
-            _dbContext = factory.GetDynamoDBContext();
+            _db = factory.GetDynamoDB();
         }
 
         public void Dispose()
         {
             _client.Dispose();
-            _dbContext.Dispose();
+            _db.Dispose();
         }
 
         [Fact]
@@ -60,21 +63,24 @@ namespace Integration.Tests.V1
             //Then
             httpResponse.StatusCode.Should().Be(StatusCodes.Status201Created);
             var apiResponse = await httpResponse.GetDeserializedResponseBodyAsync<ApiResponse<OrderDetail>>();
-            var order = apiResponse.Data;
+            var newOrder = apiResponse.Data;
 
             using (new AssertionScope())
             {
-                order.Should().NotBeNull()
+                newOrder.Should().NotBeNull()
                     .And.BeEquivalentTo(createOrderCommand, o =>
                         o.ExcludingMissingMembers());
 
-                order.Id.Should().NotBeNullOrEmpty();
-                order.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, 60000);
-                order.AssetType.Should().Be(DKK_STOCK.Type);
-                order.Status.Should().Be(OrderStatus.Active);
+                newOrder.Id.Should().NotBeNullOrEmpty();
+                newOrder.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, 60000);
+                newOrder.AssetType.Should().Be(DKK_STOCK.Type);
+                newOrder.Status.Should().Be(OrderStatus.Active);
             }
 
-            var dbOrder = await _dbContext.LoadAsync<OrderEntity>(TESTUSER_ID, order.CreatedAt);
+            var dbOrder = await _db.LoadByLocalSecondaryIndexAsync<OrderEntity>(
+                TESTUSER_ID.GetAttributeValue(), 
+                newOrder.Id.GetAttributeValue(), 
+                OrderLocalSecondaryIndexes.UserOrderIdIndex);
 
             using (new AssertionScope())
             {
@@ -137,21 +143,24 @@ namespace Integration.Tests.V1
             //Then
             httpResponse.StatusCode.Should().Be(StatusCodes.Status201Created);
             var apiResponse = await httpResponse.GetDeserializedResponseBodyAsync<ApiResponse<OrderDetail>>();
-            var order = apiResponse.Data;
+            var newOrder = apiResponse.Data;
 
             using (new AssertionScope())
             {
-                order.Should().NotBeNull()
+                newOrder.Should().NotBeNull()
                     .And.BeEquivalentTo(createOrderCommand, o =>
                         o.ExcludingMissingMembers());
 
-                order.Id.Should().NotBeNullOrEmpty();
-                order.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, 60000);
-                order.AssetType.Should().Be(DKK_STOCK.Type);
-                order.Status.Should().Be(OrderStatus.Active);
+                newOrder.Id.Should().NotBeNullOrEmpty();
+                newOrder.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, 60000);
+                newOrder.AssetType.Should().Be(DKK_STOCK.Type);
+                newOrder.Status.Should().Be(OrderStatus.Active);
             }
 
-            var dbOrder = await _dbContext.LoadAsync<OrderEntity>(TESTUSER_ID, order.CreatedAt);
+            var dbOrder = await _db.LoadByLocalSecondaryIndexAsync<OrderEntity>(
+                TESTUSER_ID.GetAttributeValue(), 
+                newOrder.Id.GetAttributeValue(), 
+                OrderLocalSecondaryIndexes.UserOrderIdIndex);
 
             using (new AssertionScope())
             {
@@ -284,11 +293,14 @@ namespace Integration.Tests.V1
             //Then
             httpResponse.StatusCode.Should().Be(StatusCodes.Status201Created);
             var apiResponse = await httpResponse.GetDeserializedResponseBodyAsync<ApiResponse<OrderDetail>>();
-            var order = apiResponse.Data;
+            var newOrder = apiResponse.Data;
 
-            order.ExpiresAt.Should().BeCloseTo(DateTime.UtcNow.AddDays(1), 60000);
+            newOrder.ExpiresAt.Should().BeCloseTo(DateTime.UtcNow.AddDays(1), 60000);
 
-            var dbOrder = await _dbContext.LoadAsync<OrderEntity>(TESTUSER_ID, order.CreatedAt);
+            var dbOrder = await _db.LoadByLocalSecondaryIndexAsync<OrderEntity>(
+                TESTUSER_ID.GetAttributeValue(), 
+                newOrder.Id.GetAttributeValue(), 
+                OrderLocalSecondaryIndexes.UserOrderIdIndex);
 
             dbOrder.ExpiresAt.Should().BeCloseTo(DateTime.UtcNow.AddDays(1), 60000);
         }

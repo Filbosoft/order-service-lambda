@@ -2,11 +2,14 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using AutoMapper;
 using Business.Repositories;
 using Business.Validation.Requests;
 using Business.Wrappers;
+using Conditus.DynamoDB.MappingExtensions.Mappers;
+using Conditus.DynamoDB.QueryExtensions.Extensions;
 using Conditus.Trader.Domain.Entities;
 using Conditus.Trader.Domain.Enums;
 using Conditus.Trader.Domain.Models;
@@ -20,20 +23,20 @@ namespace Business.Commands.Handlers
         private readonly IMapper _mapper;
         private readonly IAssetRepository _assetRepository;
         private readonly IPortfolioRepository _portfolioRepository;
-        private readonly IDynamoDBContext _dbContext;
+        private readonly IAmazonDynamoDB _db;
 
         public CreateOrderCommandHandler(
             IMediator mediator,
             IMapper mapper,
             IAssetRepository assetRepository,
             IPortfolioRepository portfolioRepository,
-            IDynamoDBContext dbContext)
+            IAmazonDynamoDB db)
         {
             _mediator = mediator;
             _mapper = mapper;
             _assetRepository = assetRepository;
             _portfolioRepository = portfolioRepository;
-            _dbContext = dbContext;
+            _db = db;
         }
 
         private const string DEFAULT_PORTFOLIO_CURRENCY_CODE = "DKK";
@@ -67,7 +70,7 @@ namespace Business.Commands.Handlers
             if (request.ExpiresAt == null)
                 entity.ExpiresAt = DateTime.UtcNow.AddDays(1);
 
-            await _dbContext.SaveAsync(entity);
+            var response = await _db.PutItemAsync(typeof(OrderEntity).GetDynamoDBTableName(), entity.GetAttributeValueMap());
 
             var orderDetail = _mapper.Map<OrderDetail>(entity);
             return BusinessResponse.Ok<OrderDetail>(orderDetail, "Order created!");
