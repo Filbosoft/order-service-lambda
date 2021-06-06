@@ -80,7 +80,7 @@ namespace Integration.Tests.V1
             //Given
             var pageSize = 2;
             var query = $"pageSize={pageSize}"
-                 + $"&portfolioId={PAGINATION_BUY_ORDER1.PortfolioId}&type={PAGINATION_BUY_ORDER1.OrderType}";
+                 + $"&portfolioId={PAGINATION_BUY_ORDER3.PortfolioId}&type={PAGINATION_BUY_ORDER3.OrderType}&createdToDate={PAGINATION_BUY_ORDER3.CreatedAt}";
             var uri = $"{BASE_URL}?{query}";
 
             //When
@@ -105,13 +105,13 @@ namespace Integration.Tests.V1
             //Given
             var lastEvaluatedKey = new Dictionary<string, AttributeValue>
             {
-                {nameof(OrderEntity.OwnerId), PAGINATION_BUY_ORDER1.OwnerId.GetAttributeValue()},
-                {nameof(OrderEntity.CreatedAt), PAGINATION_BUY_ORDER1.CreatedAt.GetAttributeValue()},
-                {nameof(OrderEntity.PortfolioId), SelfContainingCompositeKeyMapper.GetSelfContainingCompositeKeyAttributeValue(PAGINATION_BUY_ORDER1, nameof(PAGINATION_BUY_ORDER1.PortfolioId))}
+                {nameof(OrderEntity.OwnerId), PAGINATION_BUY_ORDER3.OwnerId.GetAttributeValue()},
+                {nameof(OrderEntity.CreatedAt), PAGINATION_BUY_ORDER3.CreatedAt.GetAttributeValue()},
+                {nameof(OrderEntity.PortfolioId), SelfContainingCompositeKeyMapper.GetSelfContainingCompositeKeyAttributeValue(PAGINATION_BUY_ORDER3, nameof(PAGINATION_BUY_ORDER3.PortfolioId))}
             };
             var paginationToken = PaginationTokenConverter.GetToken<OrderEntity>(lastEvaluatedKey);
             var pageSize = 2;
-            var query = $"pageSize={pageSize}&portfolioId={PAGINATION_BUY_ORDER1.PortfolioId}&type={PAGINATION_BUY_ORDER1.OrderType}&paginationToken={paginationToken}";
+            var query = $"pageSize={pageSize}&portfolioId={PAGINATION_BUY_ORDER3.PortfolioId}&type={PAGINATION_BUY_ORDER3.OrderType}&paginationToken={paginationToken}&createdToDate={PAGINATION_BUY_ORDER3.CreatedAt}";
             var uri = $"{BASE_URL}?{query}";
 
             //When
@@ -123,9 +123,9 @@ namespace Integration.Tests.V1
             var orders = apiResponse.Data;
 
             orders.Should().NotBeNullOrEmpty()
-                .And.NotContain(o => o.Id.Equals(PAGINATION_BUY_ORDER1.Id))
+                .And.NotContain(o => o.Id.Equals(PAGINATION_BUY_ORDER3.Id))
                 .And.Contain(o => o.Id.Equals(PAGINATION_BUY_ORDER2.Id))
-                .And.Contain(o => o.Id.Equals(PAGINATION_BUY_ORDER3.Id));
+                .And.Contain(o => o.Id.Equals(PAGINATION_BUY_ORDER1.Id));
             
         }
     }

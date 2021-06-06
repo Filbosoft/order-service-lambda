@@ -186,7 +186,8 @@ namespace Business.Queries.Handlers
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
                     {V_CREATED_FROM_DATE, ((DateTime) request.CreatedFromDate).GetAttributeValue()}
-                }
+                },
+                ScanIndexForward = false
             };
 
             var index = GetOptimalOrderIndex(request);
