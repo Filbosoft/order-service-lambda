@@ -256,11 +256,11 @@ namespace Business.Queries.Handlers
                 AddIndexCondition(
                     OrderLocalSecondaryIndexes.UserOrderStatusIndex,
                     query.IndexName,
-                    $"begins_with({nameof(OrderEntity.OrderStatus)}, {V_STATUS})");
+                    $"begins_with({nameof(OrderEntity.OrderStatusCreateAtCompositeKey)}, {V_STATUS})");
 
                 query.ExpressionAttributeValues.Add(
                     V_STATUS,
-                    request.Status.GetSelfContainingCompositeKeyQueryAttributeValue());
+                    new AttributeValue{ S = $"{Convert.ToUInt32(request.Status)}{MappingConstants.COMPOSITE_KEY_SEPARATOR}"});
 
             }
 

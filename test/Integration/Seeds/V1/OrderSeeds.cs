@@ -205,7 +205,7 @@ namespace Integration.Seeds.V1
             ExpiresAt = Convert.ToDateTime("2/6/2021 08:00:00 AM").ToUniversalTime()
         };
 
-        public static readonly OrderEntity PAGINATION_BUY_ORDER1 = new OrderEntity
+        public static readonly OrderEntity PAGINATION_ACTIVE_BUY_ORDER1 = new OrderEntity
         {
             Id = "42cc2dbe-955f-4cb0-92da-0aa5e59d4cee",
             OwnerId = TESTUSER_ID,
@@ -218,7 +218,7 @@ namespace Integration.Seeds.V1
             Quantity = 10,
             CreatedAt = Convert.ToDateTime("5/6/2021 08:00:01 AM").ToUniversalTime()
         };
-        public static readonly OrderEntity PAGINATION_SELL_ORDER1 = new OrderEntity
+        public static readonly OrderEntity PAGINATION_ACTIVE_SELL_ORDER1 = new OrderEntity
         {
             Id = "05d30bfd-26b8-4af5-84f1-2bc91553164b",
             OwnerId = TESTUSER_ID,
@@ -231,7 +231,7 @@ namespace Integration.Seeds.V1
             Quantity = 10,
             CreatedAt = Convert.ToDateTime("5/6/2021 08:00:02 AM").ToUniversalTime()
         };
-        public static readonly OrderEntity PAGINATION_BUY_ORDER2 = new OrderEntity
+        public static readonly OrderEntity PAGINATION_ACTIVE_BUY_ORDER2 = new OrderEntity
         {
             Id = "bc4a68e6-7da7-4bf6-b976-c309121629de",
             OwnerId = TESTUSER_ID,
@@ -244,7 +244,7 @@ namespace Integration.Seeds.V1
             Quantity = 10,
             CreatedAt = Convert.ToDateTime("5/6/2021 08:00:03 AM").ToUniversalTime()
         };
-        public static readonly OrderEntity PAGINATION_SELL_ORDER2 = new OrderEntity
+        public static readonly OrderEntity PAGINATION_ACTIVE_SELL_ORDER2 = new OrderEntity
         {
             Id = "cb867e36-6b5d-4eef-ab7c-2200a12a5473",
             OwnerId = TESTUSER_ID,
@@ -258,7 +258,7 @@ namespace Integration.Seeds.V1
             CreatedAt = Convert.ToDateTime("5/6/2021 08:00:04 AM").ToUniversalTime()
         };
 
-        public static readonly OrderEntity PAGINATION_BUY_ORDER3 = new OrderEntity
+        public static readonly OrderEntity PAGINATION_ACTIVE_BUY_ORDER3 = new OrderEntity
         {
             Id = "8765b84f-e23b-4cc4-9f6d-36e77833458d",
             OwnerId = TESTUSER_ID,
@@ -271,7 +271,7 @@ namespace Integration.Seeds.V1
             Quantity = 10,
             CreatedAt = Convert.ToDateTime("5/6/2021 08:00:05 AM").ToUniversalTime()
         };
-        public static readonly OrderEntity PAGINATION_SELL_ORDER3 = new OrderEntity
+        public static readonly OrderEntity PAGINATION_ACTIVE_SELL_ORDER3 = new OrderEntity
         {
             Id = "145cf9ae-c7d7-4c4e-b2ff-eac4589befd5",
             OwnerId = TESTUSER_ID,

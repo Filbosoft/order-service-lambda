@@ -46,6 +46,7 @@ namespace Business.Commands.Handlers
         * Expression attributes
         ***/
         private const string V_NEW_STATUS = ":v_new_status";
+        private const string V_NEW_COMPOSITE_STATUS = ":v_new_composite_status";
 
         public UpdateItemRequest GetCancelRequest(CancelOrderCommand request, OrderEntity entity)
         {
@@ -59,10 +60,11 @@ namespace Business.Commands.Handlers
                     {nameof(OrderEntity.OwnerId), request.RequestingUserId.GetAttributeValue()},
                     {nameof(OrderEntity.CreatedAt), request.OrderCreatedAt.GetAttributeValue()}
                 },
-                UpdateExpression = $"SET {nameof(OrderEntity.OrderStatus)} = {V_NEW_STATUS}",
+                UpdateExpression = $"SET {nameof(OrderEntity.OrderStatus)} = {V_NEW_STATUS}, {nameof(OrderEntity.OrderStatusCreateAtCompositeKey)} = {V_NEW_COMPOSITE_STATUS}",
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
-                    {V_NEW_STATUS, SelfContainingCompositeKeyMapper.GetSelfContainingCompositeKeyAttributeValue(entity, nameof(entity.OrderStatus))}
+                    {V_NEW_STATUS, entity.OrderStatus.GetAttributeValue()},
+                    {V_NEW_COMPOSITE_STATUS, CompositeKeyMapper.GetCompositeKeyAttributeValue(entity, nameof(entity.OrderStatusCreateAtCompositeKey))}
                 },
                 ReturnValues = "ALL_NEW"
             };

@@ -5,6 +5,6 @@ namespace Business.Repositories
 {
     public interface ICurrencyRepository
     {
-        Task<decimal> ConvertCurrency(string fromSymbol, string toSymbol, decimal amount);
+        Task<decimal> ConvertCurrency(string fromCode, string toCode, decimal amount);
     }
 }

@@ -47,6 +47,11 @@ namespace Database.Migrations
                     new AttributeDefinition
                     {
                         AttributeName = "OrderStatus",
+                        AttributeType = ScalarAttributeType.N
+                    },
+                    new AttributeDefinition
+                    {
+                        AttributeName = "OrderStatusCreateAtCompositeKey",
                         AttributeType = ScalarAttributeType.S
                     },
                     new AttributeDefinition
@@ -98,7 +103,7 @@ namespace Database.Migrations
                             partitionKey,
                             new KeySchemaElement
                             {
-                                AttributeName = "OrderStatus",
+                                AttributeName = "OrderStatusCreateAtCompositeKey",
                                 KeyType = KeyType.RANGE
                             }
                         },

@@ -13,8 +13,6 @@ using Conditus.Trader.Domain.Entities;
 using Api.Responses.V1;
 using Microsoft.AspNetCore.Mvc;
 using Amazon.DynamoDBv2;
-using System.Linq;
-using Amazon.DynamoDBv2.Model;
 using Conditus.DynamoDB.MappingExtensions.Mappers;
 using Conditus.DynamoDB.QueryExtensions.Extensions;
 using Conditus.Trader.Domain.Entities.LocalSecondaryIndexes;
@@ -111,8 +109,52 @@ namespace Integration.Tests.V1
             dbOrder.Should().NotBeNull()
                 .And.BeEquivalentTo(ACTIVE_BUY_ORDER, options => options
                     .Excluding(o => o.Price)
+                    .Excluding(o => o.OrderStatusCreateAtCompositeKey)
                     .ExcludingMissingMembers());
             dbOrder.Price.Should().Be(orderUpdater.Price);
+        }
+
+        [Fact]
+        public async void UpdateOrder_WithPriceAndExpiresAt_ShouldReturnAcceptedAndTheUpdatedOrder()
+        {
+            //Given
+            SeedOrder(ACTIVE_BUY_ORDER);
+            var uri = $"{BASE_URL}/{ACTIVE_BUY_ORDER.Id}";
+            var orderUpdater = new UpdateOrderCommand
+            {
+                Price = 0.1M,
+                ExpiresAt = DateTime.UtcNow.AddDays(5)
+            };
+
+            //When
+            var httpResponse = await _client.PutAsync(uri, HttpSerializer.GetStringContent(orderUpdater));
+
+            //Then
+            httpResponse.StatusCode.Should().Be(StatusCodes.Status202Accepted);
+            var apiResponse = await httpResponse.GetDeserializedResponseBodyAsync<ApiResponse<OrderDetail>>();
+            var updatedOrder = apiResponse.Data;
+
+            updatedOrder.Should().NotBeNull()
+                .And.BeEquivalentTo(ACTIVE_BUY_ORDER, options => options
+                    .Excluding(o => o.Price)
+                    .Excluding(o => o.ExpiresAt)
+                    .ExcludingMissingMembers());
+            updatedOrder.Price.Should().Be(orderUpdater.Price);
+            updatedOrder.ExpiresAt.Should().BeCloseTo((DateTime)orderUpdater.ExpiresAt, 60000);
+
+            var dbOrder = await _db.LoadByLocalSecondaryIndexAsync<OrderEntity>(
+                TESTUSER_ID.GetAttributeValue(),
+                updatedOrder.Id.GetAttributeValue(),
+                OrderLocalSecondaryIndexes.UserOrderIdIndex);
+
+            dbOrder.Should().NotBeNull()
+                .And.BeEquivalentTo(ACTIVE_BUY_ORDER, options => options
+                    .Excluding(o => o.Price)
+                    .Excluding(o => o.ExpiresAt)
+                    .Excluding(o => o.OrderStatusCreateAtCompositeKey)
+                    .ExcludingMissingMembers());
+            dbOrder.Price.Should().Be(orderUpdater.Price);
+            dbOrder.ExpiresAt.Should().BeCloseTo((DateTime)orderUpdater.ExpiresAt, 60000);
         }
 
         [Fact]
@@ -148,6 +190,7 @@ namespace Integration.Tests.V1
             dbOrder.Should().NotBeNull()
                 .And.BeEquivalentTo(ACTIVE_BUY_ORDER, options => options
                     .Excluding(o => o.ExpiresAt)
+                    .Excluding(o => o.OrderStatusCreateAtCompositeKey)
                     .ExcludingMissingMembers());
             dbOrder.ExpiresAt.Should().BeCloseTo((DateTime)orderUpdater.ExpiresAt, 60000);
         }
@@ -185,8 +228,10 @@ namespace Integration.Tests.V1
             dbOrder.Should().NotBeNull()
                 .And.BeEquivalentTo(ACTIVE_BUY_ORDER, options => options
                     .Excluding(o => o.OrderStatus)
+                    .Excluding(o => o.OrderStatusCreateAtCompositeKey)
                     .ExcludingMissingMembers());
             dbOrder.OrderStatus.Should().Be(OrderStatus.Cancelled);
+            dbOrder.OrderStatusCreateAtCompositeKey.Should().StartWith(((int) OrderStatus.Cancelled).ToString());
         }
 
         [Fact]

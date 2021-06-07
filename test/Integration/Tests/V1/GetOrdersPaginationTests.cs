@@ -50,12 +50,12 @@ namespace Integration.Tests.V1
         {
             var seedOrders = new List<OrderEntity>
             {
-                PAGINATION_BUY_ORDER1,
-                PAGINATION_SELL_ORDER1,
-                PAGINATION_BUY_ORDER2,
-                PAGINATION_SELL_ORDER2,
-                PAGINATION_BUY_ORDER3,
-                PAGINATION_SELL_ORDER3
+                PAGINATION_ACTIVE_BUY_ORDER1,
+                PAGINATION_ACTIVE_SELL_ORDER1,
+                PAGINATION_ACTIVE_BUY_ORDER2,
+                PAGINATION_ACTIVE_SELL_ORDER2,
+                PAGINATION_ACTIVE_BUY_ORDER3,
+                PAGINATION_ACTIVE_SELL_ORDER3
             };
 
             var writeRequests = seedOrders
@@ -80,7 +80,7 @@ namespace Integration.Tests.V1
             //Given
             var pageSize = 2;
             var query = $"pageSize={pageSize}"
-                 + $"&portfolioId={PAGINATION_BUY_ORDER3.PortfolioId}&type={PAGINATION_BUY_ORDER3.OrderType}&createdToDate={PAGINATION_BUY_ORDER3.CreatedAt}";
+                 + $"&portfolioId={PAGINATION_ACTIVE_BUY_ORDER3.PortfolioId}&type={PAGINATION_ACTIVE_BUY_ORDER3.OrderType}&createdToDate={PAGINATION_ACTIVE_BUY_ORDER3.CreatedAt}";
             var uri = $"{BASE_URL}?{query}";
 
             //When
@@ -105,13 +105,13 @@ namespace Integration.Tests.V1
             //Given
             var lastEvaluatedKey = new Dictionary<string, AttributeValue>
             {
-                {nameof(OrderEntity.OwnerId), PAGINATION_BUY_ORDER3.OwnerId.GetAttributeValue()},
-                {nameof(OrderEntity.CreatedAt), PAGINATION_BUY_ORDER3.CreatedAt.GetAttributeValue()},
-                {nameof(OrderEntity.PortfolioId), SelfContainingCompositeKeyMapper.GetSelfContainingCompositeKeyAttributeValue(PAGINATION_BUY_ORDER3, nameof(PAGINATION_BUY_ORDER3.PortfolioId))}
+                {nameof(OrderEntity.OwnerId), PAGINATION_ACTIVE_BUY_ORDER3.OwnerId.GetAttributeValue()},
+                {nameof(OrderEntity.CreatedAt), PAGINATION_ACTIVE_BUY_ORDER3.CreatedAt.GetAttributeValue()},
+                {nameof(OrderEntity.PortfolioId), SelfContainingCompositeKeyMapper.GetSelfContainingCompositeKeyAttributeValue(PAGINATION_ACTIVE_BUY_ORDER3, nameof(PAGINATION_ACTIVE_BUY_ORDER3.PortfolioId))}
             };
             var paginationToken = PaginationTokenConverter.GetToken<OrderEntity>(lastEvaluatedKey);
             var pageSize = 2;
-            var query = $"pageSize={pageSize}&portfolioId={PAGINATION_BUY_ORDER3.PortfolioId}&type={PAGINATION_BUY_ORDER3.OrderType}&paginationToken={paginationToken}&createdToDate={PAGINATION_BUY_ORDER3.CreatedAt}";
+            var query = $"pageSize={pageSize}&portfolioId={PAGINATION_ACTIVE_BUY_ORDER3.PortfolioId}&type={PAGINATION_ACTIVE_BUY_ORDER3.OrderType}&paginationToken={paginationToken}&createdToDate={PAGINATION_ACTIVE_BUY_ORDER3.CreatedAt}";
             var uri = $"{BASE_URL}?{query}";
 
             //When
@@ -123,9 +123,39 @@ namespace Integration.Tests.V1
             var orders = apiResponse.Data;
 
             orders.Should().NotBeNullOrEmpty()
-                .And.NotContain(o => o.Id.Equals(PAGINATION_BUY_ORDER3.Id))
-                .And.Contain(o => o.Id.Equals(PAGINATION_BUY_ORDER2.Id))
-                .And.Contain(o => o.Id.Equals(PAGINATION_BUY_ORDER1.Id));
+                .And.NotContain(o => o.Id.Equals(PAGINATION_ACTIVE_BUY_ORDER3.Id))
+                .And.Contain(o => o.Id.Equals(PAGINATION_ACTIVE_BUY_ORDER2.Id))
+                .And.Contain(o => o.Id.Equals(PAGINATION_ACTIVE_BUY_ORDER1.Id));
+            
+        }
+
+        [Fact]
+        public async void GetOrders_WithActiveStatusAndPaginationToken_ShouldReturnUserActiveOrdersPaginatedByTheProvidedToken()
+        {
+            //Given
+            var lastEvaluatedKey = new Dictionary<string, AttributeValue>
+            {
+                {nameof(OrderEntity.OwnerId), PAGINATION_ACTIVE_BUY_ORDER3.OwnerId.GetAttributeValue()},
+                {nameof(OrderEntity.CreatedAt), PAGINATION_ACTIVE_BUY_ORDER3.CreatedAt.GetAttributeValue()},
+                {nameof(OrderEntity.OrderStatusCreateAtCompositeKey), CompositeKeyMapper.GetCompositeKeyAttributeValue(PAGINATION_ACTIVE_BUY_ORDER3, nameof(PAGINATION_ACTIVE_BUY_ORDER3.OrderStatusCreateAtCompositeKey))}
+            };
+            var paginationToken = PaginationTokenConverter.GetToken<OrderEntity>(lastEvaluatedKey);
+            var pageSize = 2;
+            var query = $"pageSize={pageSize}&status={PAGINATION_ACTIVE_BUY_ORDER3.OrderStatus}&type={PAGINATION_ACTIVE_BUY_ORDER3.OrderType}&paginationToken={paginationToken}&createdToDate={PAGINATION_ACTIVE_BUY_ORDER3.CreatedAt}";
+            var uri = $"{BASE_URL}?{query}";
+
+            //When
+            var httpResponse = await _client.GetAsync(uri);
+
+            //Then
+            httpResponse.EnsureSuccessStatusCode();
+            var apiResponse = await httpResponse.GetDeserializedResponseBodyAsync<PagedApiResponse<IEnumerable<OrderOverview>>>();
+            var orders = apiResponse.Data;
+
+            orders.Should().NotBeNullOrEmpty()
+                .And.NotContain(o => o.Id.Equals(PAGINATION_ACTIVE_BUY_ORDER3.Id))
+                .And.Contain(o => o.Id.Equals(PAGINATION_ACTIVE_BUY_ORDER2.Id))
+                .And.Contain(o => o.Id.Equals(PAGINATION_ACTIVE_BUY_ORDER1.Id));
             
         }
     }

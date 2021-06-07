@@ -23,11 +23,11 @@ namespace DataAccess.Repositories
             client.Authenticator = new JwtAuthenticator(userToken);
         }
 
-        public async Task<decimal> ConvertCurrency(string fromSymbol, string toSymbol, decimal amount)
+        public async Task<decimal> ConvertCurrency(string fromCode, string toCode, decimal amount)
         {
             var request = new RestRequest();
-            request.AddQueryParameter("fromSymbol", fromSymbol);
-            request.AddQueryParameter("toSymbol", toSymbol);
+            request.AddQueryParameter("fromSymbol", fromCode);
+            request.AddQueryParameter("toSymbol", toCode);
             request.AddQueryParameter("amount", amount.ToString());
 
             var convertedCurrency = await client.GetAsync<decimal>(request);

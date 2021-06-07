@@ -110,26 +110,26 @@ namespace Business.Commands.Handlers
 
             if (request.Quantity != null)
             {
-                updateExpressions.Add($"SET {nameof(OrderEntity.Quantity)} = {V_NEW_QUANTITY}");
+                updateExpressions.Add($"{nameof(OrderEntity.Quantity)} = {V_NEW_QUANTITY}");
                 attributeValues.Add(V_NEW_QUANTITY, request.Quantity.GetAttributeValue());
             }
 
             if (request.Price != null)
             {
-                updateExpressions.Add($"SET {nameof(OrderEntity.Price)} = {V_NEW_PRICE}");
+                updateExpressions.Add($"{nameof(OrderEntity.Price)} = {V_NEW_PRICE}");
                 attributeValues.Add(V_NEW_PRICE, request.Price.GetAttributeValue());
             }
 
             if (request.ExpiresAt != null)
             {
-                updateExpressions.Add($"SET {nameof(OrderEntity.ExpiresAt)} = {V_NEW_EXPIRES_AT}");
+                updateExpressions.Add($"{nameof(OrderEntity.ExpiresAt)} = {V_NEW_EXPIRES_AT}");
                 attributeValues.Add(V_NEW_EXPIRES_AT, request.ExpiresAt.GetAttributeValue());
             }
 
             if (updateExpressions.Count == 0)
                 return null;
 
-            updateRequest.UpdateExpression = String.Join(' ', updateExpressions);
+            updateRequest.UpdateExpression = "SET " + String.Join(',', updateExpressions);
             updateRequest.ExpressionAttributeValues = attributeValues;
 
             return updateRequest;
