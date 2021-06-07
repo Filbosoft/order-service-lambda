@@ -14,6 +14,7 @@ using Conditus.DynamoDB.QueryExtensions.Extensions;
 using Conditus.DynamoDB.MappingExtensions.Mappers;
 using Conditus.Trader.Domain.Entities.LocalSecondaryIndexes;
 using Conditus.DynamoDB.MappingExtensions.Constants;
+using Business.Repositories;
 
 namespace Business.Queries.Handlers
 {
@@ -21,11 +22,13 @@ namespace Business.Queries.Handlers
     {
         private readonly IAmazonDynamoDB _db;
         private readonly IMapper _mapper;
+        private readonly IPortfolioRepository _portfolioRepository;
 
-        public GetOrdersQueryHandler(IAmazonDynamoDB db, IMapper mapper)
+        public GetOrdersQueryHandler(IAmazonDynamoDB db, IMapper mapper, IPortfolioRepository portfolioRepository)
         {
             _db = db;
             _mapper = mapper;
+            _portfolioRepository = portfolioRepository;
         }
 
         private const int DEFAULT_MONTHS_AMOUNT = -1; //Negative to show it's one month backwards
@@ -39,11 +42,13 @@ namespace Business.Queries.Handlers
             var paginatedQueryResponse = await QueryPaginatedAsync(query, request.PageSize);
             var orderOverviews = paginatedQueryResponse.Items
                 .Select(m => m.ToEntity<OrderEntity>())
-                .Select(_mapper.Map<OrderOverview>);
+                .Select(_mapper.Map<OrderOverview>)
+                .ToList();
+            var orderOverviewsWithJoins = await SetOrdersJoinProperties(orderOverviews);
             
             var pagination = GetPaginationFromQueryResponse(paginatedQueryResponse);
 
-            return BusinessResponse.Ok<IEnumerable<OrderOverview>>(orderOverviews, pagination);
+            return BusinessResponse.Ok<IEnumerable<OrderOverview>>(orderOverviewsWithJoins, pagination);
         }
 
         private DateTime GetDefaultCreatedFromDate(GetOrdersQuery request)
@@ -355,6 +360,17 @@ namespace Business.Queries.Handlers
                     query.IndexName);
             
             return PaginationTokenConverter.GetLastEvaluatedKeyFromToken<OrderEntity>(request.PaginationToken);
+        }
+
+        private async Task<List<OrderOverview>> SetOrdersJoinProperties(List<OrderOverview> orders)
+        {
+            foreach (var order in orders)
+            {
+                var portfolio = await _portfolioRepository.GetPortfolioById(order.PortfolioId);
+                if (portfolio != null) order.PortfolioName = portfolio.Name;
+            }
+
+            return orders;
         }
     }
 }

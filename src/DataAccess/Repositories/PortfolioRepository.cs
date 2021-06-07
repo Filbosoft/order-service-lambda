@@ -1,10 +1,11 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Business.Repositories;
 using Conditus.Trader.Domain.Models;
 using DataAccess.Options;
+using DataAccess.Repositories.Responses;
 using DateAccess.HelperMethods;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using RestSharp;
 using RestSharp.Authenticators;
@@ -25,10 +26,21 @@ namespace DataAccess.Repositories
             client.Authenticator = new JwtAuthenticator(userToken);
             
         }
+
+        private Dictionary<string, PortfolioDetail> PortfolioCache = new Dictionary<string, PortfolioDetail>();
+        
+        
         public async Task<PortfolioDetail> GetPortfolioById(string portfolioId)
         {
+            var cachePortfolio = PortfolioCache.GetValueOrDefault(portfolioId);
+            if (cachePortfolio != null)
+                return cachePortfolio;
+            
             var request = new RestRequest(portfolioId, DataFormat.Json);
-            var portfolio = await client.GetAsync<PortfolioDetail>(request);
+            var apiResponse = await client.GetAsync<ApiResponse<PortfolioDetail>>(request);
+            var portfolio = apiResponse.Data;
+
+            PortfolioCache.Add(portfolioId, portfolio);
 
             return portfolio;
         }

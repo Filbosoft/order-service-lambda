@@ -66,6 +66,7 @@ namespace Business.Commands.Handlers
             var entity = _mapper.Map<OrderEntity>(request);
             entity.Id = Guid.NewGuid().ToString();
             entity.AssetName = asset.Name;
+            entity.CurrencyCode = asset.Currency.Code;
             
             if (request.ExpiresAt == null)
                 entity.ExpiresAt = DateTime.UtcNow.AddDays(1);
