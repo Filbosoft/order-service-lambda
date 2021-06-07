@@ -31,6 +31,8 @@ namespace Api
         // This method gets called by the runtime. Use this method to add services to the container
         public void ConfigureServices(IServiceCollection services)
         {
+            services.ConfigureCors(Configuration);
+
             var authOptions = Configuration.GetSection("Auth")
                 .Get<JwtBearerOptions>();
 
@@ -68,16 +70,14 @@ namespace Api
 
             app.UseRouting();
 
+            app.UseCors();
+
             app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
-                endpoints.MapGet("/", async context =>
-                {
-                    await context.Response.WriteAsync("Welcome to running ASP.NET Core on AWS Lambda");
-                });
             });
         }
     }
