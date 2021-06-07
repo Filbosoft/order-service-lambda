@@ -102,12 +102,31 @@ namespace Business.Queries.Handlers
             var paginatedQueryResponse = new QueryResponse
             {
                 Items = pageOrderMaps,
-                LastEvaluatedKey = isResultingItemsCountBiggerThanPageSize ? pageOrderMaps.Last() : queryResponse.LastEvaluatedKey,
+                LastEvaluatedKey = GetPaginatedQueryLastEvaluatedKey(isResultingItemsCountBiggerThanPageSize, pageOrderMaps, queryResponse.LastEvaluatedKey),
                 Count = resultPageSize,
                 ScannedCount = orderMaps.Count
             };
 
             return paginatedQueryResponse;
+        }
+
+        private Dictionary<string, AttributeValue> GetPaginatedQueryLastEvaluatedKey(
+            bool isResultingItemsCountBiggerThanPageSize,
+            List<Dictionary<string, AttributeValue>> pageOrderMaps,
+            Dictionary<string, AttributeValue> lastQueryResponseLastEvaluatedKey)
+
+            => isResultingItemsCountBiggerThanPageSize ? 
+                    GetOrderLastEvaluatedKey(pageOrderMaps.Last(), lastQueryResponseLastEvaluatedKey.Keys.ToList()) 
+                    : lastQueryResponseLastEvaluatedKey;
+
+        private Dictionary<string, AttributeValue> GetOrderLastEvaluatedKey(Dictionary<string, AttributeValue> orderAttributeMap, List<string> keys)
+        {
+            var lastEvaluatedKey = new Dictionary<string, AttributeValue>();
+
+            foreach (var key in keys)
+                lastEvaluatedKey.Add(key, orderAttributeMap.GetValueOrDefault(key));
+
+            return lastEvaluatedKey;
         }
 
         private Pagination GetPaginationFromQueryResponse(QueryResponse queryResponse)
@@ -286,7 +305,7 @@ namespace Business.Queries.Handlers
                 AddIndexCondition(
                     OrderLocalSecondaryIndexes.UserOrderAssetIndex,
                     query.IndexName,
-                    $"begins_with ({nameof(OrderEntity.AssetSymbol)}, {V_ASSET_SYMBOL})");
+                    $"begins_with({nameof(OrderEntity.AssetSymbol)}, {V_ASSET_SYMBOL})");
 
                 query.ExpressionAttributeValues.Add(
                     V_ASSET_SYMBOL,
