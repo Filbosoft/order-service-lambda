@@ -8,6 +8,7 @@ using Amazon.DynamoDBv2;
 using Conditus.DynamoDB.QueryExtensions.Extensions;
 using Conditus.DynamoDB.MappingExtensions.Mappers;
 using Conditus.Trader.Domain.Entities.LocalSecondaryIndexes;
+using Business.Repositories;
 
 namespace Business.Queries.Handlers
 {
@@ -15,11 +16,13 @@ namespace Business.Queries.Handlers
     {
         private readonly IAmazonDynamoDB _db;
         private readonly IMapper _mapper;
+        private readonly IPortfolioRepository _portfolioRepository;
 
-        public GetOrderByIdQueryHandler(IAmazonDynamoDB db, IMapper mapper)
+        public GetOrderByIdQueryHandler(IAmazonDynamoDB db, IMapper mapper, IPortfolioRepository portfolioRepository)
         {
             _db = db;
             _mapper = mapper;
+            _portfolioRepository = portfolioRepository;
         }
 
         /***
@@ -40,8 +43,17 @@ namespace Business.Queries.Handlers
                     $"No order with the id of {request.OrderId} was found");
 
             var orderDetail = _mapper.Map<OrderDetail>(entity);
+            var orderDetailWithJoins = await SetOrderJoinProperties(orderDetail);
 
             return BusinessResponse.Ok<OrderDetail>(orderDetail);
+        }
+
+        private async Task<OrderDetail> SetOrderJoinProperties(OrderDetail order)
+        {
+            var portfolio = await _portfolioRepository.GetPortfolioById(order.PortfolioId);
+            if (portfolio != null) order.PortfolioName = portfolio.Name;
+
+            return order;
         }
     }
 }

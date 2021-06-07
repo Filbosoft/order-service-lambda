@@ -112,7 +112,8 @@ namespace Integration.Tests.V1
             var orders = apiResponse.Data;
 
             orders.Should().NotBeNullOrEmpty()
-                .And.NotContain(o => o.Id.Equals(COMPLETED_ORDER_FROM_ANOTHER_PORTFOLIO));
+                .And.NotContain(o => o.Id.Equals(COMPLETED_ORDER_FROM_ANOTHER_PORTFOLIO))
+                .And.OnlyContain(o => o.PortfolioName.Equals(USER_DKK_PORTFOLIO.Name));
         }
 
         [Fact]
