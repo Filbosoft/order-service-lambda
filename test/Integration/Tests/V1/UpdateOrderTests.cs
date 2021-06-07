@@ -109,7 +109,7 @@ namespace Integration.Tests.V1
             dbOrder.Should().NotBeNull()
                 .And.BeEquivalentTo(ACTIVE_BUY_ORDER, options => options
                     .Excluding(o => o.Price)
-                    .Excluding(o => o.OrderStatusCreateAtCompositeKey)
+                    .Excluding(o => o.OrderStatusCreatedAtCompositeKey)
                     .ExcludingMissingMembers());
             dbOrder.Price.Should().Be(orderUpdater.Price);
         }
@@ -151,7 +151,7 @@ namespace Integration.Tests.V1
                 .And.BeEquivalentTo(ACTIVE_BUY_ORDER, options => options
                     .Excluding(o => o.Price)
                     .Excluding(o => o.ExpiresAt)
-                    .Excluding(o => o.OrderStatusCreateAtCompositeKey)
+                    .Excluding(o => o.OrderStatusCreatedAtCompositeKey)
                     .ExcludingMissingMembers());
             dbOrder.Price.Should().Be(orderUpdater.Price);
             dbOrder.ExpiresAt.Should().BeCloseTo((DateTime)orderUpdater.ExpiresAt, 60000);
@@ -190,7 +190,7 @@ namespace Integration.Tests.V1
             dbOrder.Should().NotBeNull()
                 .And.BeEquivalentTo(ACTIVE_BUY_ORDER, options => options
                     .Excluding(o => o.ExpiresAt)
-                    .Excluding(o => o.OrderStatusCreateAtCompositeKey)
+                    .Excluding(o => o.OrderStatusCreatedAtCompositeKey)
                     .ExcludingMissingMembers());
             dbOrder.ExpiresAt.Should().BeCloseTo((DateTime)orderUpdater.ExpiresAt, 60000);
         }
@@ -228,10 +228,10 @@ namespace Integration.Tests.V1
             dbOrder.Should().NotBeNull()
                 .And.BeEquivalentTo(ACTIVE_BUY_ORDER, options => options
                     .Excluding(o => o.OrderStatus)
-                    .Excluding(o => o.OrderStatusCreateAtCompositeKey)
+                    .Excluding(o => o.OrderStatusCreatedAtCompositeKey)
                     .ExcludingMissingMembers());
             dbOrder.OrderStatus.Should().Be(OrderStatus.Cancelled);
-            dbOrder.OrderStatusCreateAtCompositeKey.Should().StartWith(((int) OrderStatus.Cancelled).ToString());
+            dbOrder.OrderStatusCreatedAtCompositeKey.Should().StartWith(((int) OrderStatus.Cancelled).ToString());
         }
 
         [Fact]

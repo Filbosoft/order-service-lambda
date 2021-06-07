@@ -137,7 +137,7 @@ namespace Integration.Tests.V1
             {
                 {nameof(OrderEntity.OwnerId), PAGINATION_ACTIVE_BUY_ORDER3.OwnerId.GetAttributeValue()},
                 {nameof(OrderEntity.CreatedAt), PAGINATION_ACTIVE_BUY_ORDER3.CreatedAt.GetAttributeValue()},
-                {nameof(OrderEntity.OrderStatusCreateAtCompositeKey), CompositeKeyMapper.GetCompositeKeyAttributeValue(PAGINATION_ACTIVE_BUY_ORDER3, nameof(PAGINATION_ACTIVE_BUY_ORDER3.OrderStatusCreateAtCompositeKey))}
+                {nameof(OrderEntity.OrderStatusCreatedAtCompositeKey), CompositeKeyMapper.GetCompositeKeyAttributeValue(PAGINATION_ACTIVE_BUY_ORDER3, nameof(PAGINATION_ACTIVE_BUY_ORDER3.OrderStatusCreatedAtCompositeKey))}
             };
             var paginationToken = PaginationTokenConverter.GetToken<OrderEntity>(lastEvaluatedKey);
             var pageSize = 2;

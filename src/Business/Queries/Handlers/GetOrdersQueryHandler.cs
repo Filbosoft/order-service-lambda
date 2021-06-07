@@ -261,7 +261,7 @@ namespace Business.Queries.Handlers
                 AddIndexCondition(
                     OrderLocalSecondaryIndexes.UserOrderStatusIndex,
                     query.IndexName,
-                    $"begins_with({nameof(OrderEntity.OrderStatusCreateAtCompositeKey)}, {V_STATUS})");
+                    $"begins_with({nameof(OrderEntity.OrderStatusCreatedAtCompositeKey)}, {V_STATUS})");
 
                 query.ExpressionAttributeValues.Add(
                     V_STATUS,
