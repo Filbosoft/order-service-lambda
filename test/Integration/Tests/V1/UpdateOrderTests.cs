@@ -41,7 +41,7 @@ namespace Integration.Tests.V1
 
         public async void SeedOrder(OrderEntity seedOrder)
         {
-            await _db.PutItemAsync(typeof(OrderEntity).GetDynamoDBTableName(), seedOrder.GetAttributeValueMap());
+            var response = await _db.PutItemAsync(typeof(OrderEntity).GetDynamoDBTableName(), seedOrder.GetAttributeValueMap());
         }
 
         [Theory]

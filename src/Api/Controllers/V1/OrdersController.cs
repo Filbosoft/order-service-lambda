@@ -15,7 +15,7 @@ namespace Api.Controllers
     [ApiController]
     [Authorize]
     [ApiVersion("1.0")]
-    [Route("api/v{v:apiVersion}/[controller]")]
+    [Route("v{v:apiVersion}/[controller]")]
     [Produces("application/json")]
     public class OrdersController : ControllerBase
     {
