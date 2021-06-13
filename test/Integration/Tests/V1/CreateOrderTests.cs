@@ -237,7 +237,7 @@ namespace Integration.Tests.V1
                 AssetSymbol = DKK_STOCK.Symbol,
                 Price = 100.1M,
                 Quantity = 1,
-                PortfolioId = NONTESTUSER_PORTFOLIO.Id,
+                PortfolioId = NONUSER_PORTFOLIO.Id,
                 ExpiresAt = DateTime.UtcNow.AddDays(1)
             };
 

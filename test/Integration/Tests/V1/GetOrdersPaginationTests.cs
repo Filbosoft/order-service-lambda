@@ -4,10 +4,8 @@ using Xunit;
 using Api;
 using System.Net.Http;
 using Conditus.Trader.Domain.Models;
-using Conditus.Trader.Domain.Enums;
 using Amazon.DynamoDBv2.DataModel;
 using FluentAssertions;
-using Microsoft.AspNetCore.Http;
 using Integration.Utilities;
 using Conditus.Trader.Domain.Entities;
 using Api.Responses.V1;
@@ -17,11 +15,10 @@ using Conditus.DynamoDB.MappingExtensions.Mappers;
 using Amazon.DynamoDBv2;
 using System.Linq;
 using Conditus.DynamoDB.QueryExtensions.Extensions;
+using Business.Queries;
 
 using static Integration.Tests.V1.TestConstants;
 using static Integration.Seeds.V1.OrderSeeds;
-using static Integration.Seeds.V1.PortfolioSeeds;
-using static Integration.Seeds.V1.AssetSeeds;
 
 namespace Integration.Tests.V1
 {
@@ -30,6 +27,7 @@ namespace Integration.Tests.V1
         private readonly HttpClient _client;
         private readonly IDynamoDBContext _dbContext;
         private readonly IAmazonDynamoDB _db;
+        private const string ORDER_QUERY_URL = BASE_URL + "/query";
 
         public GetOrdersPaginationTests(CustomWebApplicationFactory<Startup> factory)
         {
@@ -59,10 +57,10 @@ namespace Integration.Tests.V1
             };
 
             var writeRequests = seedOrders
-                .Select(o => new PutRequest{ Item = o.GetAttributeValueMap()})
-                .Select(p => new WriteRequest{ PutRequest = p})
+                .Select(o => new PutRequest { Item = o.GetAttributeValueMap() })
+                .Select(p => new WriteRequest { PutRequest = p })
                 .ToList();
-            
+
             var batchWriteRequest = new BatchWriteItemRequest
             {
                 RequestItems = new Dictionary<string, List<WriteRequest>>
@@ -78,13 +76,16 @@ namespace Integration.Tests.V1
         public async void GetOrders_WithPageSize_ShouldReturnSpecifiedPageSizeUserOrdersWithPagination()
         {
             //Given
-            var pageSize = 2;
-            var query = $"pageSize={pageSize}"
-                 + $"&portfolioId={PAGINATION_ACTIVE_BUY_ORDER3.PortfolioId}&type={PAGINATION_ACTIVE_BUY_ORDER3.OrderType}&createdToDate={PAGINATION_ACTIVE_BUY_ORDER3.CreatedAt}";
-            var uri = $"{BASE_URL}?{query}";
+            var query = new GetOrdersQuery
+            {
+                PageSize = 2,
+                PortfolioId = PAGINATION_ACTIVE_BUY_ORDER3.PortfolioId,
+                Type = PAGINATION_ACTIVE_BUY_ORDER3.OrderType,
+                CreatedToDate = PAGINATION_ACTIVE_BUY_ORDER3.CreatedAt
+            };
 
             //When
-            var httpResponse = await _client.GetAsync(uri);
+            var httpResponse = await _client.PostAsync(ORDER_QUERY_URL, HttpSerializer.GetStringContent(query));
 
             //Then
             httpResponse.EnsureSuccessStatusCode();
@@ -92,10 +93,10 @@ namespace Integration.Tests.V1
             var orders = apiResponse.Data;
 
             orders.Should().NotBeNullOrEmpty()
-                .And.HaveCount(pageSize);
+                .And.HaveCount(query.PageSize);
 
             apiResponse.Pagination.Should().NotBeNull();
-            apiResponse.Pagination.PageSize.Should().Be(pageSize);
+            apiResponse.Pagination.PageSize.Should().Be(query.PageSize);
             apiResponse.Pagination.PaginationToken.Should().NotBeNullOrEmpty();
         }
 
@@ -110,12 +111,17 @@ namespace Integration.Tests.V1
                 {nameof(OrderEntity.PortfolioId), SelfContainingCompositeKeyMapper.GetSelfContainingCompositeKeyAttributeValue(PAGINATION_ACTIVE_BUY_ORDER3, nameof(PAGINATION_ACTIVE_BUY_ORDER3.PortfolioId))}
             };
             var paginationToken = PaginationTokenConverter.GetToken<OrderEntity>(lastEvaluatedKey);
-            var pageSize = 2;
-            var query = $"pageSize={pageSize}&portfolioId={PAGINATION_ACTIVE_BUY_ORDER3.PortfolioId}&type={PAGINATION_ACTIVE_BUY_ORDER3.OrderType}&paginationToken={paginationToken}&createdToDate={PAGINATION_ACTIVE_BUY_ORDER3.CreatedAt}";
-            var uri = $"{BASE_URL}?{query}";
+            var query = new GetOrdersQuery
+            {
+                PortfolioId = PAGINATION_ACTIVE_BUY_ORDER3.PortfolioId,
+                Type = PAGINATION_ACTIVE_BUY_ORDER3.OrderType,
+                CreatedToDate = PAGINATION_ACTIVE_BUY_ORDER3.CreatedAt,
+                PageSize = 2,
+                PaginationToken = paginationToken
+            };
 
             //When
-            var httpResponse = await _client.GetAsync(uri);
+            var httpResponse = await _client.PostAsync(ORDER_QUERY_URL, HttpSerializer.GetStringContent(query));
 
             //Then
             httpResponse.EnsureSuccessStatusCode();
@@ -126,7 +132,7 @@ namespace Integration.Tests.V1
                 .And.NotContain(o => o.Id.Equals(PAGINATION_ACTIVE_BUY_ORDER3.Id))
                 .And.Contain(o => o.Id.Equals(PAGINATION_ACTIVE_BUY_ORDER2.Id))
                 .And.Contain(o => o.Id.Equals(PAGINATION_ACTIVE_BUY_ORDER1.Id));
-            
+
         }
 
         [Fact]
@@ -140,12 +146,17 @@ namespace Integration.Tests.V1
                 {nameof(OrderEntity.OrderStatusCreatedAtCompositeKey), CompositeKeyMapper.GetCompositeKeyAttributeValue(PAGINATION_ACTIVE_BUY_ORDER3, nameof(PAGINATION_ACTIVE_BUY_ORDER3.OrderStatusCreatedAtCompositeKey))}
             };
             var paginationToken = PaginationTokenConverter.GetToken<OrderEntity>(lastEvaluatedKey);
-            var pageSize = 2;
-            var query = $"pageSize={pageSize}&status={PAGINATION_ACTIVE_BUY_ORDER3.OrderStatus}&type={PAGINATION_ACTIVE_BUY_ORDER3.OrderType}&paginationToken={paginationToken}&createdToDate={PAGINATION_ACTIVE_BUY_ORDER3.CreatedAt}";
-            var uri = $"{BASE_URL}?{query}";
+            var query = new GetOrdersQuery
+            {
+                PageSize = 2,
+                PortfolioId = PAGINATION_ACTIVE_BUY_ORDER3.PortfolioId,
+                Type = PAGINATION_ACTIVE_BUY_ORDER3.OrderType,
+                CreatedToDate = PAGINATION_ACTIVE_BUY_ORDER3.CreatedAt,
+                Status = PAGINATION_ACTIVE_BUY_ORDER3.OrderStatus
+            };
 
             //When
-            var httpResponse = await _client.GetAsync(uri);
+            var httpResponse = await _client.PostAsync(ORDER_QUERY_URL, HttpSerializer.GetStringContent(query));
 
             //Then
             httpResponse.EnsureSuccessStatusCode();
@@ -156,7 +167,7 @@ namespace Integration.Tests.V1
                 .And.NotContain(o => o.Id.Equals(PAGINATION_ACTIVE_BUY_ORDER3.Id))
                 .And.Contain(o => o.Id.Equals(PAGINATION_ACTIVE_BUY_ORDER2.Id))
                 .And.Contain(o => o.Id.Equals(PAGINATION_ACTIVE_BUY_ORDER1.Id));
-            
+
         }
     }
 }

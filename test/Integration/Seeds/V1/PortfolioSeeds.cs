@@ -28,7 +28,7 @@ namespace Integration.Seeds.V1
             CurrencyCode = DKK.Code
         };
 
-        public static readonly PortfolioDetail NONTESTUSER_PORTFOLIO = new PortfolioDetail
+        public static readonly PortfolioDetail NONUSER_PORTFOLIO = new PortfolioDetail
         {
             Id = "83c61b7a-df2f-43de-9272-a9f307dc4768",
             Name = "Not users portfolio",

@@ -102,7 +102,7 @@ namespace Integration.Seeds.V1
         {
             Id = "48f3590d-7e0a-4414-ad04-8758e4b64260",
             OwnerId = "2a75d2bb-4f2b-4d8e-8167-a74c10f9b08d",
-            PortfolioId = NONTESTUSER_PORTFOLIO.Id,
+            PortfolioId = NONUSER_PORTFOLIO.Id,
             AssetSymbol = DKK_STOCK.Symbol,
             AssetType = DKK_STOCK.Type,
             OrderType = OrderType.Buy,
@@ -117,7 +117,7 @@ namespace Integration.Seeds.V1
         {
             Id = "5f72672e-0388-4628-aadc-7d6fe90019de",
             OwnerId = "2a75d2bb-4f2b-4d8e-8167-a74c10f9b08d",
-            PortfolioId = NONTESTUSER_PORTFOLIO.Id,
+            PortfolioId = NONUSER_PORTFOLIO.Id,
             AssetSymbol = DKK_STOCK.Symbol,
             AssetType = DKK_STOCK.Type,
             OrderType = OrderType.Buy,
