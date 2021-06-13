@@ -60,9 +60,9 @@ namespace Api.Controllers
             }
         }
 
-        [HttpGet]
+        [HttpPost("query")]
         public async Task<IActionResult> GetOrders(
-            [FromQuery] GetOrdersQuery query)
+            [FromBody] GetOrdersQuery query)
         {
             var response = await _mediator.Send(query);
 

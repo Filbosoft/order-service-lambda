@@ -148,11 +148,11 @@ namespace Integration.Tests.V1
             var paginationToken = PaginationTokenConverter.GetToken<OrderEntity>(lastEvaluatedKey);
             var query = new GetOrdersQuery
             {
-                PageSize = 2,
-                PortfolioId = PAGINATION_ACTIVE_BUY_ORDER3.PortfolioId,
                 Type = PAGINATION_ACTIVE_BUY_ORDER3.OrderType,
                 CreatedToDate = PAGINATION_ACTIVE_BUY_ORDER3.CreatedAt,
-                Status = PAGINATION_ACTIVE_BUY_ORDER3.OrderStatus
+                Status = PAGINATION_ACTIVE_BUY_ORDER3.OrderStatus,
+                PageSize = 2,
+                PaginationToken = paginationToken
             };
 
             //When

@@ -16,12 +16,11 @@ using Amazon.DynamoDBv2.Model;
 using Amazon.DynamoDBv2;
 using System.Linq;
 using Conditus.DynamoDB.QueryExtensions.Extensions;
+using Business.Queries;
 
 using static Integration.Tests.V1.TestConstants;
 using static Integration.Seeds.V1.OrderSeeds;
 using static Integration.Seeds.V1.PortfolioSeeds;
-using static Integration.Seeds.V1.AssetSeeds;
-using Business.Queries;
 
 namespace Integration.Tests.V1
 {
