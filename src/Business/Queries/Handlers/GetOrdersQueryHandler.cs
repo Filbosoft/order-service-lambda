@@ -302,6 +302,8 @@ namespace Business.Queries.Handlers
 
             if (request.AssetSymbol != null)
             {
+                request.AssetSymbol = request.AssetSymbol.ToUpper();
+                
                 AddIndexCondition(
                     OrderLocalSecondaryIndexes.UserOrderAssetIndex,
                     query.IndexName,
