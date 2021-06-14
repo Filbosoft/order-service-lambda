@@ -99,7 +99,7 @@ namespace Integration.Tests.V1
         }
 
         [Fact]
-        public async void GetOrders_WithPortfolioId_ShouldReturnAllPortfolioOrders()
+        public async void GetOrders_WithPortfolioId_ShouldReturnOnlyPortfolioOrders()
         {
             //Given
             var query = new GetOrdersQuery { PortfolioId = USER_DKK_PORTFOLIO.Id };
@@ -118,7 +118,7 @@ namespace Integration.Tests.V1
         }
 
         [Fact]
-        public async void GetOrders_WithPortfolioIdWhichIsNotTestUsers_ShouldReturnBadRequest()
+        public async void GetOrders_WithPortfolioIdWhichIsNotUsers_ShouldReturnBadRequest()
         {
             //Given
             var query = new GetOrdersQuery { PortfolioId = NONUSER_PORTFOLIO.Id };
@@ -171,7 +171,7 @@ namespace Integration.Tests.V1
         public async void GetOrders_WithStatus_ShouldReturnUserOrdersFilteredByStatus()
         {
             //Given
-            var query = new GetOrdersQuery { Status = OrderStatus.Completed };
+            var query = new GetOrdersQuery { Status = OrderStatus.Active };
 
             //When
             var httpResponse = await _client.PostAsync(ORDER_QUERY_URL, HttpSerializer.GetStringContent(query));
@@ -182,7 +182,7 @@ namespace Integration.Tests.V1
             var orders = apiResponse.Data;
 
             orders.Should().NotBeNullOrEmpty()
-                .And.OnlyContain(o => o.Status.Equals(OrderStatus.Completed));
+                .And.OnlyContain(o => o.Status.Equals(OrderStatus.Active));
         }
 
         [Fact]
@@ -258,6 +258,24 @@ namespace Integration.Tests.V1
 
             orders.Should().NotBeNullOrEmpty()
                 .And.OnlyContain(o => o.CompletedAt <= completedToDate);
+        }
+
+        [Fact]
+        public async void GetOrders_WithEmptyQuery_ShouldOnlyReturnUserOrders()
+        {
+            //Given
+            var query = new GetOrdersQuery();
+
+            //When
+            var httpResponse = await _client.PostAsync(ORDER_QUERY_URL, HttpSerializer.GetStringContent(query));
+            
+            //Then
+            httpResponse.EnsureSuccessStatusCode();
+            var apiResponse = await httpResponse.GetDeserializedResponseBodyAsync<PagedApiResponse<IEnumerable<OrderOverview>>>();
+            var orders = apiResponse.Data;
+
+            orders.Should().NotBeNullOrEmpty()
+                .And.NotContain(o => o.Id.Equals(ACTIVE_NONUSER_ORDER.Id));
         }
     }
 }
