@@ -36,7 +36,7 @@ To get the Conditus packages into the local feed:
 
 ## Generate user tokens
 `aws cognito-idp initiate-auth --auth-flow USER_PASSWORD_AUTH --client-id {clientId}  --auth-parameters USERNAME={username},PASSWORD="{password}"`
-aws cognito-idp initiate-auth --auth-flow USER_PASSWORD_AUTH --client-id 7omub5as1em39dsad6r4v9coe8 --auth-parameters USERNAME=TestUser,PASSWORD="Passw0rd#"
+aws cognito-idp initiate-auth --auth-flow USER_PASSWORD_AUTH --client-id 3eaa8hhqd5aml9sk1a6qh0obc5 --auth-parameters USERNAME=TestUser,PASSWORD="Passw0rd#"
 
 - https://stackoverflow.com/questions/49063292/how-to-generate-access-token-for-an-aws-cognito-user 
 
