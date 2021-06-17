@@ -4,7 +4,6 @@ using Conditus.Trader.Domain.Models;
 using DataAccess.Options;
 using DateAccess.HelperMethods;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using RestSharp;
 using RestSharp.Authenticators;
@@ -28,7 +27,7 @@ namespace DataAccess.Repositories
         public async Task<AssetDetail> GetAssetBySymbol(string symbol)
         {
             var request = new RestRequest();
-            request.AddQueryParameter("Symbol", symbol);
+            request.AddQueryParameter("Symbols", symbol);
 
             var asset = await client.GetAsync<AssetDetail>(request);
 
