@@ -23,9 +23,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Conditus.Trader.Domain" Version="1.0.9" />
-    <PackageReference Include="Conditus.DynamoDB.QueryExtensions" Version="1.0.0" />
-    <PackageReference Include="Conditus.DynamoDB.MappingExtensions" Version="1.0.0" />
+    <PackageReference Include="Conditus.Trader.Domain" Version="1.0.10" />
+    <PackageReference Include="Conditus.DynamoDB.QueryExtensions" Version="1.0.2" />
+    <PackageReference Include="Conditus.DynamoDB.MappingExtensions" Version="1.0.2" />
   </ItemGroup>
 
   <ItemGroup>
